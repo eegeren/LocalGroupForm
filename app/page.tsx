@@ -37,15 +37,19 @@ export default function Page() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      const json = await res.json()
-      if (json.ok) {
+      const text = await res.text()
+      let json: any = {}
+      try { json = JSON.parse(text) } catch {}
+
+      if (res.ok && json.ok) {
         setSuccessData({ gender: payload.gender })
         setStatus('')
         form.reset()
         setConsent(false)
         setShift({gunduz:false,aksam:false,gece:false,haftaSonu:false,parttime:false})
       } else {
-        setStatus('⚠️ Hata: ' + (json.error ?? 'Geçersiz veri veya sunucu hatası.'))
+        setStatus('⚠️ Hata: ' + (json.error || res.statusText || 'Geçersiz veri veya sunucu hatası.'))
+        console.error('/api/submit response:', { status: res.status, text })
       }
     } catch {
       setStatus('⛔ Ağ hatası, lütfen tekrar deneyin.')
@@ -55,8 +59,8 @@ export default function Page() {
   if (successData.gender) {
     const link = wpLinks[successData.gender] || ''
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
+      <main className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4 border border-neutral-200">
           <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
           {link ? (
             <>
@@ -64,20 +68,22 @@ export default function Page() {
                 Katılmanız için WhatsApp grubunuzun linki aşağıdadır:
               </p>
               <a href={link} target="_blank"
-                 className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
+                 className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
                 WhatsApp Grubuna Katıl
               </a>
             </>
           ) : (
             <p className="text-neutral-500">Grup linki tanımlı değil.</p>
           )}
+          <button onClick={()=>location.reload()}
+            className="block mx-auto mt-2 text-sm text-neutral-600 underline">Yeni başvuru yap</button>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-neutral-50">
       <div className="max-w-2xl mx-auto p-6">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
@@ -210,7 +216,7 @@ export default function Page() {
           {/* Diğer */}
           <section className="space-y-2">
             <h2 className="text-lg font-semibold">Diğer</h2>
-            <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not</label>
+            <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not *</label>
             <textarea name="message" required rows={4} placeholder="Mesajınız"
               className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
             <p className="text-xs text-neutral-500 mt-1">En az 5 karakter olmalı.</p>

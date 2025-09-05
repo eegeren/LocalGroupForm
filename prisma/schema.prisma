@@ -9,30 +9,23 @@ datasource db {
 
 model Submission {
   id        String   @id @default(cuid())
-
   fullName  String
   phone     String?
   subject   String
   message   String
-
   consent   Boolean  @default(false)
   consentAt DateTime?
-
   birthDate String?
   gender    String?
   address   String?
-
   positionApplied   String?
   employmentType    String?
   shiftAvailability String?
-
   educationLevel    String?
   foreignLanguages  String?
-
   prevCompany  String?
   prevTitle    String?
   prevDuration String?
   prevReason   String?
-
   createdAt DateTime @default(now())
 }
