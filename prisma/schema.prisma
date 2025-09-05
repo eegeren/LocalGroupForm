@@ -38,3 +38,24 @@ model Submission {
 
   createdAt         DateTime @default(now())
 }
+
+// ====== Başvuru olayları (tüm geçmiş / timeline) ======
+enum EventType {
+  NOTE            // admin notu
+  STATUS_CHANGE   // status değişti
+  ARCHIVE_CHANGE  // archived değişti
+  FIELD_CHANGE    // başka alan değişimi (gerekirse)
+}
+
+model SubmissionEvent {
+  id            String     @id @default(cuid())
+  submissionId  String
+  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  type          EventType
+  note          String?
+  // opsiyonel alanlar; değişim kaydı için
+  field         String?     // değişen alan adı (örn: "status")
+  oldValue      String?
+  newValue      String?
+  createdAt     DateTime    @default(now())
+}

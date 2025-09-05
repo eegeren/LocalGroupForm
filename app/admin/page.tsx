@@ -11,11 +11,31 @@ type Item = {
   fullName: string
   phone?: string | null
   gender?: string | null
+  address?: string | null
+  birthDate?: string | null
   positionApplied?: string | null
   workType?: string | null
+  shiftAvailability?: string | null
+  educationLevel?: string | null
+  foreignLanguages?: string | null
+  prevCompany?: string | null
+  prevTitle?: string | null
+  prevDuration?: string | null
+  prevReason?: string | null
   message: string
   status?: 'PENDING'|'REVIEWING'|'ACCEPTED'|'REJECTED'
   archived?: boolean
+  consent?: boolean
+  createdAt: string
+}
+
+type Event = {
+  id: string
+  type: 'NOTE'|'STATUS_CHANGE'|'ARCHIVE_CHANGE'|'FIELD_CHANGE'
+  note?: string | null
+  field?: string | null
+  oldValue?: string | null
+  newValue?: string | null
   createdAt: string
 }
 
@@ -40,6 +60,11 @@ export default function AdminPage() {
   // pagination
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGESIZE)
+
+  // detail panel state
+  const [open, setOpen] = useState(false)
+  const [detail, setDetail] = useState<{item: Item, events: Event[]} | null>(null)
+  const [note, setNote] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true); setErr('')
@@ -99,6 +124,12 @@ export default function AdminPage() {
     { header: 'İşlem',
       cell: ({ row }) => (
         <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => openDetails(row.original.id)}
+            className="border rounded-lg px-2 py-1 text-sm"
+          >
+            Detay
+          </button>
           <select
             defaultValue={row.original.status || 'PENDING'}
             onChange={e => patch(row.original.id, { status: e.target.value })}
@@ -149,7 +180,32 @@ export default function AdminPage() {
     })
     const json = await res.json().catch(()=>({}))
     if (!res.ok || !json.ok) return alert('Güncellenemedi')
+    // panel açık ve aynı kayıt ise detay tazele
+    if (detail?.item.id === id) await openDetails(id)
     load()
+  }
+
+  async function openDetails(id: string) {
+    const res = await fetch(`/api/admin/${id}`)
+    const json = await res.json()
+    if (!json.ok) { alert(json.error || 'detay hatası'); return }
+    setDetail({ item: json.item, events: json.events })
+    setOpen(true)
+  }
+
+  async function addNote() {
+    if (!detail?.item?.id) return
+    const text = note.trim()
+    if (text.length < 2) return
+    const res = await fetch(`/api/admin/${detail.item.id}/note`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ note: text })
+    })
+    const json = await res.json()
+    if (!res.ok || !json.ok) { alert('Not eklenemedi'); return }
+    setNote('')
+    await openDetails(detail.item.id) // timeline’ı yenile
   }
 
   // Export
@@ -245,7 +301,7 @@ export default function AdminPage() {
           </select>
         </div>
 
-        {/* Tarih + sırala + arşiv */}
+        {/* Tarih + sırala + arşiv + pagesize */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <input type="date" value={from} onChange={e=>{ setFrom(e.target.value); setPage(1)}}
                  className="rounded-lg border px-3 py-2 bg-white" />
@@ -309,16 +365,93 @@ export default function AdminPage() {
                   className="rounded-lg border px-3 py-2 bg-white disabled:opacity-50">
             ‹ Önceki
           </button>
-          <div className="text-sm">
-            Sayfa <b>{page}</b> / {pageCount}
-          </div>
-          <button onClick={() => setPage(p => Math.min(pageCount, p+1))}
-                  disabled={page>=pageCount}
+          <div className="text-sm">Sayfa <b>{page}</b> / {Math.max(1, Math.ceil(total / pageSize))}</div>
+          <button onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(total / pageSize)), p+1))}
+                  disabled={page>=Math.max(1, Math.ceil(total / pageSize))}
                   className="rounded-lg border px-3 py-2 bg-white disabled:opacity-50">
             Sonraki ›
           </button>
         </div>
       </div>
+
+      {/* Detay Paneli */}
+      {open && detail && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-xl p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-semibold">Başvuru Detayı</h2>
+              <button onClick={() => setOpen(false)} className="border rounded-lg px-3 py-1.5">Kapat</button>
+            </div>
+
+            {/* Alanlar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm">
+              {([
+                ['Ad Soyad', detail.item.fullName],
+                ['Telefon', detail.item.phone || '-'],
+                ['Cinsiyet', detail.item.gender === 'female' ? 'Kadın' : detail.item.gender === 'male' ? 'Erkek' : (detail.item.gender ? 'Belirtmek istemiyor' : '-')],
+                ['Adres', detail.item.address || '-'],
+                ['Doğum Tarihi', detail.item.birthDate ? new Date(detail.item.birthDate).toLocaleDateString() : '-'],
+                ['Pozisyon', detail.item.positionApplied || '-'],
+                ['Çalışma Türü', detail.item.workType || '-'],
+                ['Vardiya', detail.item.shiftAvailability || '-'],
+                ['Eğitim Durumu', detail.item.educationLevel || '-'],
+                ['Yabancı Diller', detail.item.foreignLanguages || '-'],
+                ['Önceki İşletme', detail.item.prevCompany || '-'],
+                ['Görev/Ünvan', detail.item.prevTitle || '-'],
+                ['Çalışma Süresi', detail.item.prevDuration || '-'],
+                ['Ayrılma Sebebi', detail.item.prevReason || '-'],
+                ['Durum', detail.item.status || 'PENDING'],
+                ['Arşiv', detail.item.archived ? 'Evet' : 'Hayır'],
+                ['KVKK Onayı', detail.item.consent ? 'Evet' : 'Hayır'],
+                ['Kayıt Tarihi', new Date(detail.item.createdAt).toLocaleString()],
+              ] as [string,string][]).map(([k,v]) => (
+                <div key={k} className="border rounded-lg p-2">
+                  <div className="text-neutral-500">{k}</div>
+                  <div className="font-medium">{v}</div>
+                </div>
+              ))}
+              <div className="sm:col-span-2 border rounded-lg p-2">
+                <div className="text-neutral-500">Ek Not (Başvuran)</div>
+                <div className="font-medium whitespace-pre-wrap">{detail.item.message || '-'}</div>
+              </div>
+            </div>
+
+            {/* Not Ekle */}
+            <div className="mb-6">
+              <div className="text-sm font-semibold mb-2">Admin Notu Ekle</div>
+              <div className="flex gap-2">
+                <textarea rows={2} value={note} onChange={e=>setNote(e.target.value)}
+                          placeholder="Not yazın…" className="flex-1 border rounded-lg p-2" />
+                <button onClick={addNote} className="border rounded-lg px-3 py-2 bg-black text-white">Ekle</button>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div>
+              <div className="text-sm font-semibold mb-2">Geçmiş / Timeline</div>
+              <div className="space-y-2">
+                {detail.events.length === 0 ? (
+                  <div className="text-sm text-neutral-500">Henüz geçmiş yok.</div>
+                ) : detail.events.map(ev => (
+                  <div key={ev.id} className="border rounded-lg p-2 text-sm">
+                    <div className="text-neutral-500">{new Date(ev.createdAt).toLocaleString()}</div>
+                    {ev.type === 'NOTE' && (
+                      <div><b>Not:</b> {ev.note}</div>
+                    )}
+                    {ev.type !== 'NOTE' && (
+                      <div>
+                        <b>{ev.type}</b>{ev.field ? ` (${ev.field})` : ''}: {ev.oldValue ?? '-'} → {ev.newValue ?? '-'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </main>
   )
 }
