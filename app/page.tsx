@@ -16,7 +16,7 @@ export default function Page() {
 
   const wpLinks: Record<string, string> = {
     female: 'https://chat.whatsapp.com/Cvk2uOq86aZKDYuLGhEk2v?mode=ems_copy_t',
-    male: 'https://chat.whatsapp.com/BQLVl1fCfHNHvPZpiCrhWw?mode=ems_copy_t'
+    male:   'https://chat.whatsapp.com/BQLVl1fCfHNHvPZpiCrhWw?mode=ems_copy_t'
   }
 
   const [successData, setSuccessData] = useState<{gender?: string}>({})
@@ -67,16 +67,16 @@ export default function Page() {
               <p className="text-neutral-700">
                 Katılmanız için WhatsApp grubunuzun linki aşağıdadır:
               </p>
-              <a href={link} target="_blank"
-                 className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+              <a href={link} target="_blank" className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
                 WhatsApp Grubuna Katıl
               </a>
             </>
           ) : (
             <p className="text-neutral-500">Grup linki tanımlı değil.</p>
           )}
-          <button onClick={()=>location.reload()}
-            className="block mx-auto mt-2 text-sm text-neutral-600 underline">Yeni başvuru yap</button>
+          <button onClick={()=>location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
+            Yeni başvuru yap
+          </button>
         </div>
       </main>
     )
@@ -85,15 +85,23 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-neutral-50">
       <div className="max-w-2xl mx-auto p-6">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
-          </p>
+        {/* Üst bar + Admin butonu */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
+            <p className="text-sm text-neutral-500 mt-1">
+              Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
+            </p>
+          </div>
+          <Link
+            href="/admin"
+            className="inline-flex items-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium
+                       shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-black/70 focus:ring-offset-2">
+            Admin
+          </Link>
         </div>
 
         <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow p-6 space-y-8 border border-neutral-200">
-
           {/* Kişisel Bilgiler */}
           <section className="space-y-4">
             <h2 className="text-lg font-semibold">Kişisel Bilgiler</h2>
