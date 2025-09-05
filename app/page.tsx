@@ -16,7 +16,7 @@ export default function Page() {
 
   const wpLinks: Record<string, string> = {
     female: 'https://chat.whatsapp.com/Cvk2uOq86aZKDYuLGhEk2v?mode=ems_copy_t',
-    male:   'https://chat.whatsapp.com/BQLVl1fCfHNHvPZpiCrhWw?mode=ems_copy_t'
+    male: 'https://chat.whatsapp.com/BQLVl1fCfHNHvPZpiCrhWw?mode=ems_copy_t'
   }
 
   const [successData, setSuccessData] = useState<{gender?: string}>({})
@@ -37,19 +37,15 @@ export default function Page() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      const text = await res.text()
-      let json: any = {}
-      try { json = JSON.parse(text) } catch {}
-
-      if (res.ok && json.ok) {
+      const json = await res.json()
+      if (json.ok) {
         setSuccessData({ gender: payload.gender })
         setStatus('')
         form.reset()
         setConsent(false)
         setShift({gunduz:false,aksam:false,gece:false,haftaSonu:false,parttime:false})
       } else {
-        setStatus('⚠️ Hata: ' + (json.error || res.statusText || 'Geçersiz veri veya sunucu hatası.'))
-        console.error('/api/submit response:', { status: res.status, text })
+        setStatus('⚠️ Hata: ' + (json.error ?? 'Geçersiz veri veya sunucu hatası.'))
       }
     } catch {
       setStatus('⛔ Ağ hatası, lütfen tekrar deneyin.')
@@ -59,49 +55,39 @@ export default function Page() {
   if (successData.gender) {
     const link = wpLinks[successData.gender] || ''
     return (
-      <main className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4 border border-neutral-200">
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
           <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
           {link ? (
             <>
               <p className="text-neutral-700">
                 Katılmanız için WhatsApp grubunuzun linki aşağıdadır:
               </p>
-              <a href={link} target="_blank" className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
+              <a href={link} target="_blank"
+                 className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
                 WhatsApp Grubuna Katıl
               </a>
             </>
           ) : (
             <p className="text-neutral-500">Grup linki tanımlı değil.</p>
           )}
-          <button onClick={()=>location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
-            Yeni başvuru yap
-          </button>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <main className="min-h-screen">
       <div className="max-w-2xl mx-auto p-6">
-        {/* Üst bar + Admin butonu */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
-            </p>
-          </div>
-          <Link
-            href="/admin"
-            className="inline-flex items-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium
-                       shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-black/70 focus:ring-offset-2">
-            Admin
-          </Link>
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
+          </p>
         </div>
 
         <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow p-6 space-y-8 border border-neutral-200">
+
           {/* Kişisel Bilgiler */}
           <section className="space-y-4">
             <h2 className="text-lg font-semibold">Kişisel Bilgiler</h2>
@@ -148,15 +134,19 @@ export default function Page() {
                 <input name="positionApplied" placeholder="Örn: Garson, Kasiyer, Barista"
                   className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışma Türü</label>
-                <select name="employmentType" className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2">
-                  <option value="">Seçiniz</option>
-                  <option value="fulltime">Tam Zamanlı</option>
-                  <option value="parttime">Yarı Zamanlı</option>
-                  <option value="internship">Staj</option>
+             <div>
+              <label className="block text-sm font-medium text-gray-700">Çalışma Türü</label>
+               <select
+                 name="workType"
+                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+  >
+                 <option value="">Seçiniz</option>
+                 <option value="sabit">Sabit</option>
+                 <option value="sezonluk">Sezonluk</option>
+                 <option value="gunluk">Günlük</option>
+                <option value="parttime">Part-Time</option>
                 </select>
-              </div>
+             </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -224,7 +214,7 @@ export default function Page() {
           {/* Diğer */}
           <section className="space-y-2">
             <h2 className="text-lg font-semibold">Diğer</h2>
-            <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not *</label>
+            <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not</label>
             <textarea name="message" required rows={4} placeholder="Mesajınız"
               className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
             <p className="text-xs text-neutral-500 mt-1">En az 5 karakter olmalı.</p>
