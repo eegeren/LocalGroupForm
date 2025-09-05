@@ -1,28 +1,29 @@
 import { NextResponse } from 'next/server'
 
-const USER = process.env.ADMIN_USER
-const PASS = process.env.ADMIN_PASS
-
-export function middleware(req: Request) {
+export async function middleware(req: Request) {
   const url = new URL(req.url)
 
-  // Sadece /admin altında çalışsın
+  // Sadece /admin altında koruma uygula
   if (!url.pathname.startsWith('/admin')) return NextResponse.next()
 
-  // Env yoksa koruma devre dışı (yanlış konfigürasyonda site kitlenmesin)
-  if (!USER || !PASS) return NextResponse.next()
-
-  const auth = req.headers.get('authorization') || ''
-  if (!auth.startsWith('Basic ')) {
-    return new NextResponse('Auth required', {
-      status: 401,
-      headers: { 'WWW-Authenticate': 'Basic realm="Admin"' },
-    })
+  // Login sayfasına ve login API'sine kısıt uygulama
+  if (url.pathname === '/admin/login' || url.pathname.startsWith('/api/admin/login')) {
+    return NextResponse.next()
   }
 
-  const [u, p] = Buffer.from(auth.slice(6), 'base64').toString('utf8').split(':')
-  if (u !== USER || p !== PASS) return new NextResponse('Forbidden', { status: 403 })
-  return NextResponse.next()
+  // Cookie kontrolü
+  const cookie = (req.headers.get('cookie') || '')
+    .split(';')
+    .map(s => s.trim())
+    .find(s => s.startsWith('admin_ok='))
+
+  const ok = cookie?.split('=')[1] === '1'
+  if (ok) return NextResponse.next()
+
+  // Yetkisi yoksa login sayfasına yönlendir
+  url.pathname = '/admin/login'
+  return NextResponse.redirect(url)
 }
 
+// Yalnızca /admin altı
 export const config = { matcher: ['/admin/:path*'] }
