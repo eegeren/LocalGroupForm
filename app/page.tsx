@@ -56,6 +56,19 @@ export default function Page() {
     const link = wpLinks[successData.gender] || ''
     return (
       <main className="min-h-screen flex items-center justify-center">
+        {/* ✅ Her ekranda görünen Admin butonu */}
+        <Link
+          href="/admin"
+          aria-label="Admin"
+          className="fixed bottom-4 right-4 z-50 inline-flex items-center justify-center
+                     h-12 w-12 rounded-full bg-black text-white shadow-lg
+                     hover:bg-neutral-800 active:scale-[0.98] transition
+                     md:h-auto md:w-auto md:rounded-xl md:px-4 md:py-2 md:top-4 md:right-4 md:bottom-auto md:fixed"
+        >
+          <span className="hidden md:inline">Admin</span>
+          <span className="md:hidden text-lg leading-none">⚙️</span>
+        </Link>
+
         <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
           <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
           {link ? (
@@ -78,6 +91,19 @@ export default function Page() {
 
   return (
     <main className="min-h-screen">
+      {/* ✅ Her ekranda görünen Admin butonu */}
+      <Link
+        href="/admin"
+        aria-label="Admin"
+        className="fixed bottom-4 right-4 z-50 inline-flex items-center justify-center
+                   h-12 w-12 rounded-full bg-black text-white shadow-lg
+                   hover:bg-neutral-800 active:scale-[0.98] transition
+                   md:h-auto md:w-auto md:rounded-xl md:px-4 md:py-2 md:top-4 md:right-4 md:bottom-auto md:fixed"
+      >
+        <span className="hidden md:inline">Admin</span>
+        <span className="md:hidden text-lg leading-none">⚙️</span>
+      </Link>
+
       <div className="max-w-2xl mx-auto p-6">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Başvuru Formu</h1>
@@ -134,19 +160,19 @@ export default function Page() {
                 <input name="positionApplied" placeholder="Örn: Garson, Kasiyer, Barista"
                   className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
               </div>
-             <div>
-              <label className="block text-sm font-medium text-gray-700">Çalışma Türü</label>
-               <select
-                 name="workType"
-                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-  >
-                 <option value="">Seçiniz</option>
-                 <option value="sabit">Sabit</option>
-                 <option value="sezonluk">Sezonluk</option>
-                 <option value="gunluk">Günlük</option>
-                <option value="parttime">Part-Time</option>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Çalışma Türü</label>
+                <select
+                  name="workType"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="">Seçiniz</option>
+                  <option value="sabit">Sabit</option>
+                  <option value="sezonluk">Sezonluk</option>
+                  <option value="gunluk">Günlük</option>
+                  <option value="parttime">Part-Time</option>
                 </select>
-             </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
