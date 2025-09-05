@@ -6,7 +6,9 @@ import { prisma } from '../../../lib/prisma'
 
 export async function GET() {
   try {
-    const items = await prisma.submission.findMany({ orderBy: { createdAt: 'desc' } })
+    const items = await prisma.submission.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
     return NextResponse.json({ ok: true, items }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e: any) {
     console.error('[admin GET] error:', e)
