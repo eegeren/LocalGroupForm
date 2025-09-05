@@ -7,25 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Status {
+  PENDING
+  REVIEWING
+  ACCEPTED
+  REJECTED
+}
+
 model Submission {
-  id        String   @id @default(cuid())
-  fullName  String
-  phone     String?
-  subject   String
-  message   String
-  consent   Boolean  @default(false)
-  consentAt DateTime?
-  birthDate String?
-  gender    String?
-  address   String?
+  id                String   @id @default(cuid())
+  fullName          String
+  phone             String?
+  gender            String?
+  address           String?
+  birthDate         DateTime?
   positionApplied   String?
-  employmentType    String?
+  workType          String?   // sabit | sezonluk | gunluk | parttime
   shiftAvailability String?
   educationLevel    String?
   foreignLanguages  String?
-  prevCompany  String?
-  prevTitle    String?
-  prevDuration String?
-  prevReason   String?
-  createdAt DateTime @default(now())
+  prevCompany       String?
+  prevTitle         String?
+  prevDuration      String?
+  prevReason        String?
+  message           String
+  consent           Boolean  @default(false)
+
+  status            Status   @default(PENDING)
+  archived          Boolean  @default(false)
+
+  createdAt         DateTime @default(now())
 }
