@@ -71,19 +71,20 @@ export default function AdminPage() {
     setItems(s => s.filter(x => x.id !== id))
   }
 
+  // --- CSV (mevcut) ---
   function toCSV(rows: Item[]) {
     const esc = (v: any) => {
       const s = (v ?? '').toString().replace(/"/g,'""')
       return `"${s}"`
     }
     const header = [
-      'id','fullName','phone','gender','positionApplied','workType','message','createdAt'
+      'id','Ad Soyad','Telefon','Cinsiyet','Pozisyon','Çalışma Türü','Not','Tarih'
     ]
     const lines = [header.join(',')]
     for (const r of rows) {
       lines.push([
-        r.id, r.fullName, r.phone, r.gender, r.positionApplied, r.workType, r.message,
-        new Date(r.createdAt).toLocaleString()
+        r.id, r.fullName, r.phone ?? '', r.gender ?? '', r.positionApplied ?? '',
+        r.workType ?? '', r.message ?? '', new Date(r.createdAt).toLocaleString()
       ].map(esc).join(','))
     }
     return lines.join('\n')
@@ -100,6 +101,36 @@ export default function AdminPage() {
     URL.revokeObjectURL(url)
   }
 
+  // --- XLSX (yeni) ---
+  async function downloadXLSX() {
+    // Dinamik import: bundle’ı şişirmemek ve SSR sorunlarını önlemek için
+    const XLSX = await import('xlsx')
+    const rows = filtered.map(r => ({
+      ID: r.id,
+      'Ad Soyad': r.fullName,
+      Telefon: r.phone ?? '',
+      Cinsiyet: r.gender === 'female' ? 'Kadın' : r.gender === 'male' ? 'Erkek' :
+                r.gender ? 'Belirtmek istemiyor' : '',
+      'Pozisyon': r.positionApplied ?? '',
+      'Çalışma Türü': r.workType ?? '',
+      Not: r.message ?? '',
+      Tarih: new Date(r.createdAt).toLocaleString(),
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Başvurular')
+    const ab = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+    const blob = new Blob([ab], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `basvurular_${new Date().toISOString().slice(0,10)}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <main className="min-h-screen bg-neutral-50">
       <div className="max-w-5xl mx-auto p-4 md:p-6">
@@ -107,7 +138,8 @@ export default function AdminPage() {
           <h1 className="text-2xl font-bold">Başvurular</h1>
           <div className="flex gap-2">
             <button onClick={load} className="rounded-lg border px-3 py-2 bg-white hover:bg-neutral-50">Yenile</button>
-            <button onClick={downloadCSV} className="rounded-lg bg-black text-white px-3 py-2 hover:bg-neutral-800">CSV İndir</button>
+            <button onClick={downloadCSV} className="rounded-lg border px-3 py-2 bg-white hover:bg-neutral-50">CSV İndir</button>
+            <button onClick={downloadXLSX} className="rounded-lg bg-black text-white px-3 py-2 hover:bg-neutral-800">Excel İndir</button>
           </div>
         </div>
 
@@ -145,7 +177,7 @@ export default function AdminPage() {
           Toplam: <b>{items.length}</b> · Filtrelenmiş: <b>{filtered.length}</b>
         </div>
 
-        {/* Tablo / Kart liste */}
+        {/* Tablo */}
         <div className="overflow-x-auto bg-white border rounded-xl">
           <table className="min-w-full text-sm">
             <thead className="bg-neutral-50 border-b">
