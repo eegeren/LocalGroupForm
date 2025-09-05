@@ -1,80 +1,41 @@
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
-
-function toBool(v: any) {
-  const s = (v ?? '').toString().toLowerCase()
-  return s === 'true' || s === 'on' || s === '1'
-}
+import prisma from '../../../lib/prisma'
 
 export async function POST(req: Request) {
   try {
-    const raw = await req.text()
-    let data: any = {}
-    try {
-      data = raw ? JSON.parse(raw) : {}
-    } catch {
-      return NextResponse.json(
-        { ok: false, reason: 'json', error: 'JSON parse error', raw },
-        { status: 400 }
-      )
+    const body = await req.json()
+
+    const fullName = String(body.fullName ?? '').trim()
+    const message  = String(body.message  ?? '').trim()
+    const consent  = Boolean(body.consent)
+
+    // --- minimum kurallar: ad soyad, mesaj(>=5), KVKK ---
+    if (!fullName) {
+      return NextResponse.json({ ok: false, error: 'fullName_required' }, { status: 400 })
+    }
+    if (message.length < 5) {
+      return NextResponse.json({ ok: false, error: 'message_too_short' }, { status: 400 })
+    }
+    if (!consent) {
+      return NextResponse.json({ ok: false, error: 'consent_required' }, { status: 400 })
     }
 
-    const fullName = (data.fullName ?? '').toString().trim()
-    const message = (data.message ?? '').toString().trim()
-    const consent = toBool(data.consent)
-    const subject = data.positionApplied
-      ? `İş Başvurusu - ${data.positionApplied}`
-      : data.subject || 'İş Başvurusu'
+    // opsiyonelleri temizle
+    const data: any = {
+      fullName,
+      message,
+      consent: true,
 
-    if (!fullName || !message || !consent) {
-      return NextResponse.json(
-        {
-          ok: false,
-          reason: 'validation',
-          error: 'Zorunlu alan eksik',
-          need: {
-            fullName: !fullName,
-            message: !message,
-            consent: !consent,
-          },
-        },
-        { status: 400 }
-      )
+      phone: (body.phone ? String(body.phone).trim() : null) || null,
+      gender: body.gender ? String(body.gender) : null,
+      positionApplied: body.positionApplied ? String(body.positionApplied).trim() : null,
+      workType: body.workType ? String(body.workType) : null,
+      // İstersen diğer alanları da burada map’le (address, birthDate vs.)
     }
 
-    const created = await prisma.submission.create({
-      data: {
-        fullName,
-        subject,
-        message,
-        consent,
-        consentAt: consent ? new Date() : null,
-        phone: data.phone ?? null,
-        birthDate: data.birthDate ?? null,
-        gender: data.gender ?? null,
-        address: data.address ?? null,
-        positionApplied: data.positionApplied ?? null,
-        employmentType: data.employmentType ?? null,
-        shiftAvailability: data.shiftAvailability ?? null,
-        educationLevel: data.educationLevel ?? null,
-        foreignLanguages: data.foreignLanguages ?? null,
-        prevCompany: data.prevCompany ?? null,
-        prevTitle: data.prevTitle ?? null,
-        prevDuration: data.prevDuration ?? null,
-        prevReason: data.prevReason ?? null,
-      },
-    })
-
+    const created = await prisma.submission.create({ data })
     return NextResponse.json({ ok: true, id: created.id })
   } catch (e: any) {
-    console.error('[submit] server error:', e)
-    return NextResponse.json(
-      { ok: false, reason: 'server', error: e?.message || 'server-error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ ok: false, error: e?.message || 'server_error' }, { status: 500 })
   }
 }

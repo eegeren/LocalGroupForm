@@ -7,22 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Status {
-  PENDING
-  REVIEWING
-  ACCEPTED
-  REJECTED
-}
-
 model Submission {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   fullName          String
   phone             String?
+  subject           String
+  message           String
+  consent           Boolean   @default(false)
+  consentAt         DateTime?
+  birthDate         String?
   gender            String?
   address           String?
-  birthDate         DateTime?
   positionApplied   String?
-  workType          String?   // sabit | sezonluk | gunluk | parttime
+  employmentType    String?
   shiftAvailability String?
   educationLevel    String?
   foreignLanguages  String?
@@ -30,49 +27,5 @@ model Submission {
   prevTitle         String?
   prevDuration      String?
   prevReason        String?
-  message           String
-  consent           Boolean  @default(false)
-
-  status            Status   @default(PENDING)
-  archived          Boolean  @default(false)
-
-  createdAt         DateTime @default(now())
-}
-
-// ====== Başvuru olayları (tüm geçmiş / timeline) ======
-enum EventType {
-  NOTE            // admin notu
-  STATUS_CHANGE   // status değişti
-  ARCHIVE_CHANGE  // archived değişti
-  FIELD_CHANGE    // başka alan değişimi (gerekirse)
-}
-
-model SubmissionEvent {
-  id            String     @id @default(cuid())
-  submissionId  String
-  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  type          EventType
-  note          String?
-  // opsiyonel alanlar; değişim kaydı için
-  field         String?     // değişen alan adı (örn: "status")
-  oldValue      String?
-  newValue      String?
-  createdAt     DateTime    @default(now())
-}
-
-// ====== İş Geçmişi (bir başvuruda birden fazla) ======
-model Employment {
-  id            String      @id @default(cuid())
-  submissionId  String
-  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-
-  company       String
-  title         String
-  startDate     DateTime?
-  endDate       DateTime?
-  reason        String?
-  notes         String?
-
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt         DateTime  @default(now())
 }
