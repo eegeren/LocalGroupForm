@@ -48,8 +48,13 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState('')
 
-  // (filtre yok – varsayılanlarla çağırıyoruz)
-  const q = '', gender = '', workType = '', status = '', archived = false, from = '', to = '', order: 'desc'|'asc' = 'desc'
+  // -- sadece isim/telefon/pozisyon araması --
+  const [q, setQ] = useState('')
+
+  // sabit filtre varsayılanları
+  const gender = '', workType = '', status = '', from = '', to = ''
+  const archived = false
+  const order: 'desc'|'asc' = 'desc'
 
   // pagination
   const [page, setPage] = useState(1)
@@ -78,7 +83,7 @@ export default function AdminPage() {
     } catch (e:any) {
       setErr(e?.message || 'Yükleme hatası')
     } finally { setLoading(false) }
-  }, [page, pageSize])
+  }, [q, page, pageSize])
 
   useEffect(() => { load() }, [load])
 
@@ -90,10 +95,12 @@ export default function AdminPage() {
     { header: 'Tür', accessorKey: 'workType',
       cell: ({ getValue }) => {
         const v = (getValue() as string) || ''
-        const map: any = { sabit:'bg-blue-100 text-blue-700',
+        const map: any = {
+          sabit:'bg-blue-100 text-blue-700',
           sezonluk:'bg-green-100 text-green-700',
           gunluk:'bg-yellow-100 text-yellow-700',
-          parttime:'bg-purple-100 text-purple-700' }
+          parttime:'bg-purple-100 text-purple-700'
+        }
         const cls = map[v] || 'bg-neutral-100 text-neutral-700'
         return <span className={`px-2 py-0.5 rounded-md text-xs ${cls}`}>{v || '-'}</span>
       } },
@@ -116,7 +123,6 @@ export default function AdminPage() {
     { header: 'Tarih', accessorKey: 'createdAt',
       cell: ({ getValue }) => new Date(getValue() as string).toLocaleString() },
     { header: 'İşlem',
-      // DURUM SELECTİ KALDIRILDI
       cell: ({ row }) => (
         <div className="flex gap-2 justify-end">
           <button
@@ -125,14 +131,12 @@ export default function AdminPage() {
           >
             Detay
           </button>
-
           <button
             onClick={() => patch(row.original.id, { archived: !row.original.archived })}
             className="border rounded-lg px-2 py-1 text-sm"
           >
             {row.original.archived ? 'Arşivden Çıkar' : 'Arşivle'}
           </button>
-
           <button
             onClick={() => onDelete(row.original.id)}
             className="border rounded-lg px-2 py-1 text-sm hover:bg-red-50 hover:border-red-400"
@@ -256,9 +260,17 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Başlık + aksiyonlar */}
+      {/* Başlık + arama + aksiyonlar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-        <h1 className="text-2xl font-bold">Başvurular</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Başvurular</h1>
+          <input
+            value={q}
+            onChange={(e)=>{ setQ(e.target.value); setPage(1) }}
+            placeholder="İsim, telefon veya pozisyon ara…"
+            className="rounded-lg border px-3 py-2 bg-white w-64"
+          />
+        </div>
         <div className="flex gap-2">
           <button onClick={load} className="rounded-lg border px-3 py-2 bg-white hover:bg-neutral-50">Yenile</button>
           <button onClick={downloadCSV} className="rounded-lg border px-3 py-2 bg-white hover:bg-neutral-50">CSV</button>
