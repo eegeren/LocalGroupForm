@@ -6,18 +6,19 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
   try {
+    // --- Content-Type kontrolü ---
     if (req.headers.get('content-type')?.includes('application/json') !== true) {
       return NextResponse.json({ ok: false, error: 'invalid_content_type' }, { status: 415 })
     }
 
     const body = await req.json()
 
-    // --- basit doğrulama ---
+    // --- Basit doğrulama ---
     if (!body?.fullName || String(body.fullName).trim().length < 2) {
       return NextResponse.json({ ok: false, error: 'fullName_required' }, { status: 400 })
     }
 
-    // --- sadece şemada olan alanları al ---
+    // --- Sadece şemada olan alanları al ---
     const data: any = {
       fullName: body.fullName,
       phone: body.phone ?? null,
@@ -33,8 +34,8 @@ export async function POST(req: Request) {
 
       // iş tarafı
       positionApplied: body.positionApplied ?? null,
-      workType: body.workType ?? null,            // şemanızda varsa tutulur
-      employmentType: body.employmentType ?? null, // yoksa null kalır
+      workType: body.workType ?? null,
+      employmentType: body.employmentType ?? null,
       shiftAvailability: body.shiftAvailability ?? null,
       educationLevel: body.educationLevel ?? null,
       foreignLanguages: body.foreignLanguages ?? null,
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
           : []
 
       if (to.length && process.env.EMAIL_FROM && process.env.RESEND_API_KEY) {
-        await resend.emails.send({
+        const resp = await resend.emails.send({
           from: process.env.EMAIL_FROM!,
           to,
           subject: `Yeni Başvuru: ${saved.fullName}${saved.positionApplied ? ` • ${saved.positionApplied}` : ''}`,
@@ -73,6 +74,8 @@ export async function POST(req: Request) {
             <small>Bu mail Local Group form sisteminden otomatik gönderildi.</small>
           `,
         })
+
+        console.log('Resend send result:', resp)
       }
     } catch (mailErr) {
       console.error('Resend send error:', mailErr)
@@ -82,7 +85,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, id: saved.id })
   } catch (err: any) {
     console.error('submit error:', err)
-    // Prisma şema alan uyuşmazlığında gelen mesajı döndürmek işinizi kolaylaştırır
     return NextResponse.json({ ok: false, error: err?.message ?? 'server_error' }, { status: 500 })
   }
 }
