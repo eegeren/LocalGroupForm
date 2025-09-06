@@ -26,6 +26,7 @@ model Submission {
   prevCompany       String?
   prevTitle         String?
   prevDuration      String?
+  workType          String?
   prevReason        String?
   createdAt         DateTime  @default(now())
 }
