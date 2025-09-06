@@ -11,7 +11,7 @@ model Submission {
   id                String    @id @default(cuid())
   fullName          String
   phone             String?
-  subject           String
+  subject           String?
   message           String
   consent           Boolean   @default(false)
   consentAt         DateTime?
