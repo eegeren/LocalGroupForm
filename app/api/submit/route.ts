@@ -1,60 +1,88 @@
-import { NextResponse } from "next/server"
-import { Resend } from "resend"
-import NewApplicationEmail from "@/app/emails/NewApplication"
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-
-    const saved = {
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      ...body,
+    if (req.headers.get('content-type')?.includes('application/json') !== true) {
+      return NextResponse.json({ ok: false, error: 'invalid_content_type' }, { status: 415 })
     }
 
-    const from = process.env.EMAIL_FROM || "Local Group <no-reply@onresend.com>"
-    const toRaw = process.env.EMAIL_TO || ""
-    const recipients = toRaw.split(",").map((s) => s.trim()).filter(Boolean)
+    const body = await req.json()
 
-    if (recipients.length > 0) {
-      try {
-        // Önce React template ile dene
-        await resend.emails.send({
-          from,
-          to: recipients,
-          subject: `Yeni Başvuru: ${saved.fullName || ""} • ${saved.positionApplied || ""}`.trim(),
-          react: NewApplicationEmail(saved),
-        })
-      } catch (e) {
-        console.error("React email gönderilemedi, fallback HTML kullanılacak", e)
+    // --- basit doğrulama ---
+    if (!body?.fullName || String(body.fullName).trim().length < 2) {
+      return NextResponse.json({ ok: false, error: 'fullName_required' }, { status: 400 })
+    }
 
-        // React template hata verirse fallback html
+    // --- sadece şemada olan alanları al ---
+    const data: any = {
+      fullName: body.fullName,
+      phone: body.phone ?? null,
+      subject: body.subject ?? null,
+      message: body.message ?? '',
+      consent: !!body.consent,
+      consentAt: body.consent ? new Date() : null,
+
+      // kişisel
+      birthDate: body.birthDate ?? null,
+      gender: body.gender ?? null,
+      address: body.address ?? null,
+
+      // iş tarafı
+      positionApplied: body.positionApplied ?? null,
+      workType: body.workType ?? null,            // şemanızda varsa tutulur
+      employmentType: body.employmentType ?? null, // yoksa null kalır
+      shiftAvailability: body.shiftAvailability ?? null,
+      educationLevel: body.educationLevel ?? null,
+      foreignLanguages: body.foreignLanguages ?? null,
+
+      // geçmiş
+      prevCompany: body.prevCompany ?? null,
+      prevTitle: body.prevTitle ?? null,
+      prevDuration: body.prevDuration ?? null,
+      prevReason: body.prevReason ?? null,
+    }
+
+    // --- DB'ye kaydet ---
+    const saved = await prisma.submission.create({ data })
+
+    // --- Admin’e mail (best-effort) ---
+    try {
+      const to =
+        process.env.EMAIL_TO
+          ? process.env.EMAIL_TO.split(',').map(s => s.trim()).filter(Boolean)
+          : []
+
+      if (to.length && process.env.EMAIL_FROM && process.env.RESEND_API_KEY) {
         await resend.emails.send({
-          from,
-          to: recipients,
-          subject: "Yeni Başvuru Geldi 🎉",
+          from: process.env.EMAIL_FROM!,
+          to,
+          subject: `Yeni Başvuru: ${saved.fullName}${saved.positionApplied ? ` • ${saved.positionApplied}` : ''}`,
           html: `
             <h2>Yeni Başvuru</h2>
             <p><b>Ad Soyad:</b> ${saved.fullName}</p>
-            <p><b>Telefon:</b> ${saved.phone || "-"}</p>
-            <p><b>Pozisyon:</b> ${saved.positionApplied || "-"}</p>
-            <p><b>Çalışma Türü:</b> ${saved.workType || "-"}</p>
-            <p><b>Mesaj:</b> ${saved.message || "-"}</p>
+            <p><b>Telefon:</b> ${saved.phone ?? '-'}</p>
+            <p><b>Pozisyon:</b> ${saved.positionApplied ?? '-'}</p>
+            <p><b>Çalışma Türü:</b> ${saved.workType ?? '-'}</p>
+            <p><b>Vardiya:</b> ${saved.shiftAvailability ?? '-'}</p>
+            <p><b>Mesaj:</b> ${saved.message ?? '-'}</p>
             <hr/>
             <small>Bu mail Local Group form sisteminden otomatik gönderildi.</small>
           `,
         })
       }
+    } catch (mailErr) {
+      console.error('Resend send error:', mailErr)
+      // mail patlasa bile kullanıcıya başarılı dönüyoruz (DB kaydı yapıldı)
     }
 
     return NextResponse.json({ ok: true, id: saved.id })
   } catch (err: any) {
-    console.error("Mail gönderim hatası", err)
-    return NextResponse.json(
-      { ok: false, error: "Mail gönderilemedi" },
-      { status: 500 }
-    )
+    console.error('submit error:', err)
+    // Prisma şema alan uyuşmazlığında gelen mesajı döndürmek işinizi kolaylaştırır
+    return NextResponse.json({ ok: false, error: err?.message ?? 'server_error' }, { status: 500 })
   }
 }
