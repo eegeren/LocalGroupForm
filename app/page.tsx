@@ -219,22 +219,25 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {[
-                  {k:'gunduz', label:'Gündüz'},
-                  {k:'aksam', label:'Akşam'},
-                  {k:'gece', label:'Gece'},
-                  {k:'haftaSonu', label:'Hafta Sonu'},
-                  {k:'parttime', label:'Part-Time'},
-                ].map(opt => (
-                  <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
-                    <input type="checkbox"
-                      checked={shift[opt.k as ShiftKeys]}
-                      onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
-                    {opt.label}
-                  </label>
-                ))}
-              </div>
+              <div>
+  <h3 className="text-sm font-semibold text-neutral-800 mb-2">Vardiya Türü</h3>
+  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+    {[
+      {k:'gunduz', label:'Gündüz'},
+      {k:'aksam', label:'Akşam'},
+      {k:'gece', label:'Gece'},
+      {k:'haftaSonu', label:'Hafta Sonu'},
+      {k:'parttime', label:'Part-Time'},
+    ].map(opt => (
+      <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
+        <input type="checkbox"
+          checked={shift[opt.k as ShiftKeys]}
+          onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
+        {opt.label}
+      </label>
+    ))}
+  </div>
+</div>
 
               <div className="flex justify-between">
                 <button type="button" onClick={()=>setStep(1)} className="rounded-xl border px-5 py-2.5">Geri</button>
