@@ -132,7 +132,7 @@ export default function Page() {
             Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
           </p>
 
-          <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
             <div className="h-full bg-black transition-all" style={{width: progress + '%'}} />
           </div>
           <div className="mt-1 text-xs text-neutral-600 text-right">{progress}%</div>
@@ -205,7 +205,8 @@ export default function Page() {
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700">Çalışma Türü *</label>
+                  {/* >>> Burayı kalın & siyah yaptık <<< */}
+                  <label className="block text-sm font-bold mb-2 text-black">Çalışma Türü *</label>
                   <select name="workType"
                     value={workType} onChange={(e)=>setWorkType(e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
