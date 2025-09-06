@@ -23,6 +23,7 @@ export default function Page() {
   }
   const [successData, setSuccessData] = useState<{gender?: string}>({})
 
+  // Adım doğrulamaları (mevcut DOM yapısını bozmayalım)
   function validateStep1() {
     const fullName = (document.querySelector('input[name="fullName"]') as HTMLInputElement)?.value?.trim()
     if (!fullName) return 'Ad Soyad zorunludur.'
@@ -77,54 +78,45 @@ export default function Page() {
   if (successData.gender) {
     const link = wpLinks[successData.gender] || ''
     return (
-      <main className="min-h-screen bg-neutral-50">
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
-          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between">
-            <div className="font-semibold">Local Group</div>
-            <Link href="/admin" className="text-sm px-3 py-1.5 rounded-lg border bg-white hover:bg-neutral-50">
-              Yönetici Girişi
-            </Link>
-          </div>
-        </div>
-
-        <div className="max-w-md mx-auto px-4 py-10">
-          <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
-            <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
-            {link ? (
-              <>
-                <p className="text-neutral-700">Katılmanız için WhatsApp grubunuzun linki aşağıdadır:</p>
-                <a href={link} target="_blank"
-                   className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
-                  WhatsApp Grubuna Katıl
-                </a>
-              </>
-            ) : (
-              <p className="text-neutral-500">Grup linki tanımlı değil.</p>
-            )}
-            <button onClick={() => location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
-              Yeni başvuru yap
-            </button>
-          </div>
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
+          <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
+          {link ? (
+            <>
+              <p className="text-neutral-700">Katılmanız için WhatsApp grubunuzun linki aşağıdadır:</p>
+              <a href={link} target="_blank"
+                 className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
+                WhatsApp Grubuna Katıl
+              </a>
+            </>
+          ) : (
+            <p className="text-neutral-500">Grup linki tanımlı değil.</p>
+          )}
+          <button onClick={() => location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
+            Yeni başvuru yap
+          </button>
         </div>
       </main>
     )
   }
 
+  // Progress
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100
 
   return (
-    <main className="min-h-screen bg-neutral-50">
-      {/* ÜST BAR */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
-        <div className="max-w-2xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="font-semibold">Başvuru Formu</div>
-          <Link href="/admin" className="text-sm px-3 py-1.5 rounded-lg border bg-white hover:bg-neutral-50">
+    <main className="min-h-screen">
+      <div className="max-w-2xl mx-auto p-6">
+        {/* Üst başlık + Yönetici butonu */}
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-sm font-medium">Başvuru Formu</div>
+          <Link
+            href="/admin"
+            className="rounded-lg border px-3 py-1.5 text-sm bg-white hover:bg-neutral-50"
+          >
             Yönetici Girişi
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-2xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-center">Başvuru Formu</h1>
           <p className="text-sm text-neutral-500 mt-1 text-center">
@@ -139,7 +131,8 @@ export default function Page() {
         </div>
 
         <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow p-6 space-y-8 border border-neutral-200">
-          {/* Step 1 */}
+
+          {/* === STEP 1: Kişisel Bilgiler === */}
           {step === 1 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Kişisel Bilgiler</h2>
@@ -175,7 +168,9 @@ export default function Page() {
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
               </div>
-              <div className="flex justify-end">
+
+              <div className="flex justify-between">
+                <span />
                 <button
                   type="button"
                   onClick={()=>{
@@ -189,7 +184,7 @@ export default function Page() {
             </section>
           )}
 
-          {/* Step 2 */}
+          {/* === STEP 2: Çalışma Bilgileri === */}
           {step === 2 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Çalışma Bilgileri</h2>
@@ -210,6 +205,24 @@ export default function Page() {
                   </select>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {[
+                  {k:'gunduz', label:'Gündüz'},
+                  {k:'aksam', label:'Akşam'},
+                  {k:'gece', label:'Gece'},
+                  {k:'haftaSonu', label:'Hafta Sonu'},
+                  {k:'parttime', label:'Part-Time'},
+                ].map(opt => (
+                  <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox"
+                      checked={shift[opt.k as ShiftKeys]}
+                      onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+
               <div className="flex justify-between">
                 <button type="button" onClick={()=>setStep(1)} className="rounded-xl border px-5 py-2.5">Geri</button>
                 <button
@@ -225,46 +238,119 @@ export default function Page() {
             </section>
           )}
 
-          {/* Step 3 */}
+          {/* === STEP 3: Eğitim / Deneyim / Diğer + KVKK === */}
           {step === 3 && (
-            <section className="space-y-6">
-              <h2 className="text-lg font-semibold">Eğitim & Deneyim</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-neutral-700">Eğitim Durumu</label>
-                  <input name="educationLevel" placeholder="Lise, Ön Lisans, Lisans vb."
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+            <>
+              {/* Eğitim */}
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold">Eğitim & Deneyim</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Eğitim Durumu</label>
+                    <input name="educationLevel" placeholder="Lise, Ön Lisans, Lisans vb."
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Yabancı Dil</label>
+                    <input name="foreignLanguages" placeholder="Örn: İngilizce B2; Almanca A2"
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-neutral-700">Yabancı Dil</label>
-                  <input name="foreignLanguages" placeholder="Örn: İngilizce B2; Almanca A2"
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+              </section>
+
+              {/* Deneyim */}
+              <section className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışılan İşletme</label>
+                    <input name="prevCompany" placeholder="Örn: Local Group Cafe"
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Görev / Pozisyon</label>
+                    <input name="prevTitle" placeholder="Örn: Garson"
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışma Süresi</label>
+                    <input name="prevDuration" placeholder="Örn: 6 ay, 2022-2023"
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Ayrılma Sebebi</label>
+                    <input name="prevReason" placeholder="Örn: Okul dönemi bitti"
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                  </div>
                 </div>
-              </div>
-              <div>
+              </section>
+
+              {/* Diğer */}
+              <section className="space-y-2">
                 <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not *</label>
                 <textarea name="message" required rows={4} placeholder="Mesajınız"
                   className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
-              </div>
+                <p className="text-xs text-neutral-500 mt-1">En az 5 karakter olmalı.</p>
+              </section>
+
+              {/* KVKK */}
               <div className="flex items-start gap-3">
                 <input id="kvkk" type="checkbox" required checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
                   className="mt-1 h-4 w-4 rounded border-neutral-300"/>
                 <label htmlFor="kvkk" className="text-sm text-neutral-700">
-                  <span className="font-medium">KVKK Aydınlatmasını</span> okudum ve onay veriyorum.{' '}
+                  <span className="font-medium">KVKK Aydınlatmasını</span> okudum ve kişisel verilerimin
+                  iletişim amacıyla işlenmesine onay veriyorum.{' '}
                   <Link href="/kvkk" className="underline">(Metni gör)</Link>
                 </label>
               </div>
+
+              {/* Durum */}
               <div className="text-sm min-h-5">{status}</div>
-              <div className="flex justify-between">
+
+              {/* Butonlar */}
+              <div className="flex gap-3 justify-between">
                 <button type="button" onClick={()=>setStep(2)} className="rounded-xl border px-5 py-2.5">Geri</button>
-                <button disabled={loading}
-                  className="inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-2.5 disabled:opacity-60 hover:bg-neutral-800">
+                <button
+                  disabled={loading}
+                  className="inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-2.5
+                             font-medium disabled:opacity-60 hover:bg-neutral-800 transition"
+                >
                   {loading ? 'Gönderiliyor…' : 'Gönder'}
                 </button>
               </div>
-            </section>
+            </>
           )}
+
+          {/*
+            ====== ÖNEMLİ: Hidden alanlar ======
+            Step 1 ve Step 2 görünmüyorken form submit edildiğinde
+            zorunlu alanlar eksik gitmesin diye DOM’dan okunup gizli gönderiyoruz.
+          */}
+          <input
+            type="hidden" name="fullName"
+            value={(document.querySelector<HTMLInputElement>('input[name="fullName"]')?.value) || ''}
+          />
+          <input
+            type="hidden" name="phone"
+            value={(document.querySelector<HTMLInputElement>('input[name="phone"]')?.value) || ''}
+          />
+          <input
+            type="hidden" name="birthDate"
+            value={(document.querySelector<HTMLInputElement>('input[name="birthDate"]')?.value) || ''}
+          />
+          <input type="hidden" name="gender" value={gender} />
+          <input
+            type="hidden" name="address"
+            value={(document.querySelector<HTMLInputElement>('input[name="address"]')?.value) || ''}
+          />
+          <input
+            type="hidden" name="positionApplied"
+            value={(document.querySelector<HTMLInputElement>('input[name="positionApplied"]')?.value) || ''}
+          />
+          <input
+            type="hidden" name="workType"
+            value={(document.querySelector<HTMLSelectElement>('select[name="workType"]')?.value) || ''}
+          />
         </form>
       </div>
     </main>
