@@ -40,7 +40,6 @@ export default function Page() {
   }
   const [successData, setSuccessData] = useState<{gender?: string}>({})
 
-  // --- Adım validasyonları ---
   function validateStep1() {
     if (!fullName.trim()) return 'Ad Soyad zorunludur.'
     return ''
@@ -91,27 +90,29 @@ export default function Page() {
     } finally { setLoading(false) }
   }
 
-  // Başarı ekranı
   if (successData.gender) {
     const link = wpLinks[successData.gender] || ''
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
-          <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
-          {link ? (
-            <>
-              <p className="text-neutral-700">Katılmanız için WhatsApp grubunuzun linki aşağıdadır:</p>
-              <a href={link} target="_blank"
-                 className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
-                WhatsApp Grubuna Katıl
-              </a>
-            </>
-          ) : (
-            <p className="text-neutral-500">Grup linki tanımlı değil.</p>
-          )}
-          <button onClick={() => location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
-            Yeni başvuru yap
-          </button>
+      <main className="min-h-screen flex items-center justify-center relative bg-white">
+        <div className="absolute inset-0 bg-watermark" />
+        <div className="relative">
+          <div className="bg-white p-6 rounded-2xl shadow max-w-md text-center space-y-4">
+            <h1 className="text-2xl font-bold">Başvurunuz Alındı ✅</h1>
+            {link ? (
+              <>
+                <p className="text-neutral-700">Katılmanız için WhatsApp grubunuzun linki aşağıdadır:</p>
+                <a href={link} target="_blank"
+                  className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
+                  WhatsApp Grubuna Katıl
+                </a>
+              </>
+            ) : (
+              <p className="text-neutral-500">Grup linki tanımlı değil.</p>
+            )}
+            <button onClick={() => location.reload()} className="block mx-auto mt-2 text-sm text-neutral-600 underline">
+              Yeni başvuru yap
+            </button>
+          </div>
         </div>
       </main>
     )
@@ -120,8 +121,11 @@ export default function Page() {
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100
 
   return (
-    <main className="min-h-screen">
-      <div className="max-w-2xl mx-auto p-6">
+    <main className="min-h-screen relative bg-white">
+      {/* Watermark layer */}
+      <div className="absolute inset-0 bg-watermark" />
+      {/* İçerik layer */}
+      <div className="relative max-w-2xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-center">Başvuru Formu</h1>
           <p className="text-sm text-neutral-500 mt-1 text-center">
@@ -135,8 +139,6 @@ export default function Page() {
         </div>
 
         <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow p-6 space-y-8 border border-neutral-200">
-
-          {/* STEP 1 */}
           {step === 1 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Kişisel Bilgiler</h2>
@@ -192,7 +194,6 @@ export default function Page() {
             </section>
           )}
 
-          {/* STEP 2 */}
           {step === 2 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Çalışma Bilgileri</h2>
@@ -249,7 +250,6 @@ export default function Page() {
             </section>
           )}
 
-          {/* STEP 3 */}
           {step === 3 && (
             <>
               <section className="space-y-4">

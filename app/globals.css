@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* --- Watermark background --- */
+.bg-watermark {
+  background-image: url("/logo.png");
+  background-repeat: repeat;
+  background-size: 200px; /* tekrar boyutu */
+  opacity: 0.05; /* şeffaflık */
+  pointer-events: none; /* form etkileşimini bozmaz */
+}
