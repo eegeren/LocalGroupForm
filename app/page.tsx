@@ -9,7 +9,24 @@ export default function Page() {
   const [status, setStatus] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [consent, setConsent] = useState(false)
-  const [gender, setGender] = useState<string>('')
+
+  // --- FORM STATE (SSR güvenli) ---
+  const [fullName, setFullName] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [phone, setPhone] = useState('')
+  const [gender, setGender] = useState('')
+  const [address, setAddress] = useState('')
+
+  const [positionApplied, setPositionApplied] = useState('')
+  const [workType, setWorkType] = useState('')
+
+  const [educationLevel, setEducationLevel] = useState('')
+  const [foreignLanguages, setForeignLanguages] = useState('')
+  const [prevCompany, setPrevCompany] = useState('')
+  const [prevTitle, setPrevTitle] = useState('')
+  const [prevDuration, setPrevDuration] = useState('')
+  const [prevReason, setPrevReason] = useState('')
+  const [message, setMessage] = useState('')
 
   const [shift, setShift] = useState<Record<ShiftKeys, boolean>>({
     gunduz:false, aksam:false, gece:false, haftaSonu:false, parttime:false
@@ -23,20 +40,17 @@ export default function Page() {
   }
   const [successData, setSuccessData] = useState<{gender?: string}>({})
 
-  // Adım doğrulamaları (mevcut DOM yapısını bozmayalım)
+  // --- Adım validasyonları ---
   function validateStep1() {
-    const fullName = (document.querySelector('input[name="fullName"]') as HTMLInputElement)?.value?.trim()
-    if (!fullName) return 'Ad Soyad zorunludur.'
+    if (!fullName.trim()) return 'Ad Soyad zorunludur.'
     return ''
   }
   function validateStep2() {
-    const workType = (document.querySelector('select[name="workType"]') as HTMLSelectElement)?.value
     if (!workType) return 'Çalışma Türü seçiniz.'
     return ''
   }
   function validateStep3() {
-    const message = (document.querySelector('textarea[name="message"]') as HTMLTextAreaElement)?.value ?? ''
-    if ((message.trim()).length < 5) return 'Ek Not en az 5 karakter olmalı.'
+    if (message.trim().length < 5) return 'Ek Not en az 5 karakter olmalı.'
     if (!consent) return 'Lütfen KVKK aydınlatmasını onaylayın.'
     return ''
   }
@@ -47,24 +61,28 @@ export default function Page() {
     if (ve) { setStatus(ve); return }
 
     setLoading(true); setStatus('Gönderiliyor…')
-    const form = e.currentTarget
-    const formData = new FormData(form)
-    const payload: any = Object.fromEntries(formData.entries())
-    payload.consent = consent
-    payload.shiftAvailability = toShiftString(shift)
+
+    const payload: any = {
+      fullName, birthDate, phone, gender, address,
+      positionApplied, workType,
+      educationLevel, foreignLanguages,
+      prevCompany, prevTitle, prevDuration, prevReason,
+      message,
+      consent,
+      shiftAvailability: toShiftString(shift),
+    }
 
     try {
       const res = await fetch('/api/submit', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       const json = await res.json()
       if (json.ok) {
-        setSuccessData({ gender: payload.gender })
+        setSuccessData({ gender })
         setStatus('')
-        form.reset()
-        setConsent(false)
-        setShift({gunduz:false,aksam:false,gece:false,haftaSonu:false,parttime:false})
+        // reset (istersen kalsın diye boş bırakabilirsin)
         setStep(1)
       } else {
         setStatus('⚠️ Hata: ' + (json.error ?? 'Geçersiz veri veya sunucu hatası.'))
@@ -100,7 +118,6 @@ export default function Page() {
     )
   }
 
-  // Progress
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100
 
   return (
@@ -123,7 +140,6 @@ export default function Page() {
             Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
           </p>
 
-          {/* Progress bar */}
           <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
             <div className="h-full bg-black transition-all" style={{width: progress + '%'}} />
           </div>
@@ -132,7 +148,7 @@ export default function Page() {
 
         <form onSubmit={onSubmit} className="bg-white rounded-2xl shadow p-6 space-y-8 border border-neutral-200">
 
-          {/* === STEP 1: Kişisel Bilgiler === */}
+          {/* STEP 1 */}
           {step === 1 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Kişisel Bilgiler</h2>
@@ -140,16 +156,19 @@ export default function Page() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Ad Soyad *</label>
                   <input name="fullName" required placeholder="Adınız Soyadınız"
+                    value={fullName} onChange={(e)=>setFullName(e.target.value)}
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Doğum Tarihi</label>
                   <input type="date" name="birthDate"
+                    value={birthDate} onChange={(e)=>setBirthDate(e.target.value)}
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Telefon</label>
                   <input name="phone" placeholder="5xx xxx xx xx"
+                    value={phone} onChange={(e)=>setPhone(e.target.value)}
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
@@ -165,6 +184,7 @@ export default function Page() {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Adres</label>
                   <input name="address" placeholder="İl/İlçe, mahalle, adres"
+                    value={address} onChange={(e)=>setAddress(e.target.value)}
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
               </div>
@@ -184,7 +204,7 @@ export default function Page() {
             </section>
           )}
 
-          {/* === STEP 2: Çalışma Bilgileri === */}
+          {/* STEP 2 */}
           {step === 2 && (
             <section className="space-y-4">
               <h2 className="text-lg font-semibold">Çalışma Bilgileri</h2>
@@ -192,11 +212,14 @@ export default function Page() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Başvurulan Pozisyon</label>
                   <input name="positionApplied" placeholder="Örn: Garson, Kasiyer, Barista"
+                    value={positionApplied} onChange={(e)=>setPositionApplied(e.target.value)}
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-neutral-700">Çalışma Türü *</label>
-                  <select name="workType" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                  <select name="workType"
+                    value={workType} onChange={(e)=>setWorkType(e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     <option value="">Seçiniz</option>
                     <option value="sabit">Sabit</option>
                     <option value="sezonluk">Sezonluk</option>
@@ -238,61 +261,64 @@ export default function Page() {
             </section>
           )}
 
-          {/* === STEP 3: Eğitim / Deneyim / Diğer + KVKK === */}
+          {/* STEP 3 */}
           {step === 3 && (
             <>
-              {/* Eğitim */}
               <section className="space-y-4">
                 <h2 className="text-lg font-semibold">Eğitim & Deneyim</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Eğitim Durumu</label>
                     <input name="educationLevel" placeholder="Lise, Ön Lisans, Lisans vb."
+                      value={educationLevel} onChange={(e)=>setEducationLevel(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Yabancı Dil</label>
                     <input name="foreignLanguages" placeholder="Örn: İngilizce B2; Almanca A2"
+                      value={foreignLanguages} onChange={(e)=>setForeignLanguages(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                 </div>
               </section>
 
-              {/* Deneyim */}
               <section className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışılan İşletme</label>
                     <input name="prevCompany" placeholder="Örn: Local Group Cafe"
+                      value={prevCompany} onChange={(e)=>setPrevCompany(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Görev / Pozisyon</label>
                     <input name="prevTitle" placeholder="Örn: Garson"
+                      value={prevTitle} onChange={(e)=>setPrevTitle(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışma Süresi</label>
                     <input name="prevDuration" placeholder="Örn: 6 ay, 2022-2023"
+                      value={prevDuration} onChange={(e)=>setPrevDuration(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Ayrılma Sebebi</label>
                     <input name="prevReason" placeholder="Örn: Okul dönemi bitti"
+                      value={prevReason} onChange={(e)=>setPrevReason(e.target.value)}
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                 </div>
               </section>
 
-              {/* Diğer */}
               <section className="space-y-2">
                 <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not *</label>
                 <textarea name="message" required rows={4} placeholder="Mesajınız"
+                  value={message} onChange={(e)=>setMessage(e.target.value)}
                   className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 <p className="text-xs text-neutral-500 mt-1">En az 5 karakter olmalı.</p>
               </section>
 
-              {/* KVKK */}
               <div className="flex items-start gap-3">
                 <input id="kvkk" type="checkbox" required checked={consent}
                   onChange={(e) => setConsent(e.target.checked)}
@@ -304,10 +330,8 @@ export default function Page() {
                 </label>
               </div>
 
-              {/* Durum */}
               <div className="text-sm min-h-5">{status}</div>
 
-              {/* Butonlar */}
               <div className="flex gap-3 justify-between">
                 <button type="button" onClick={()=>setStep(2)} className="rounded-xl border px-5 py-2.5">Geri</button>
                 <button
@@ -321,36 +345,21 @@ export default function Page() {
             </>
           )}
 
-          {/*
-            ====== ÖNEMLİ: Hidden alanlar ======
-            Step 1 ve Step 2 görünmüyorken form submit edildiğinde
-            zorunlu alanlar eksik gitmesin diye DOM’dan okunup gizli gönderiyoruz.
-          */}
-          <input
-            type="hidden" name="fullName"
-            value={(document.querySelector<HTMLInputElement>('input[name="fullName"]')?.value) || ''}
-          />
-          <input
-            type="hidden" name="phone"
-            value={(document.querySelector<HTMLInputElement>('input[name="phone"]')?.value) || ''}
-          />
-          <input
-            type="hidden" name="birthDate"
-            value={(document.querySelector<HTMLInputElement>('input[name="birthDate"]')?.value) || ''}
-          />
+          {/* Hidden alanlar: Step1/2’de girilen zorunlular backend’e her zaman gitsin */}
+          <input type="hidden" name="fullName" value={fullName} />
+          <input type="hidden" name="phone" value={phone} />
+          <input type="hidden" name="birthDate" value={birthDate} />
           <input type="hidden" name="gender" value={gender} />
-          <input
-            type="hidden" name="address"
-            value={(document.querySelector<HTMLInputElement>('input[name="address"]')?.value) || ''}
-          />
-          <input
-            type="hidden" name="positionApplied"
-            value={(document.querySelector<HTMLInputElement>('input[name="positionApplied"]')?.value) || ''}
-          />
-          <input
-            type="hidden" name="workType"
-            value={(document.querySelector<HTMLSelectElement>('select[name="workType"]')?.value) || ''}
-          />
+          <input type="hidden" name="address" value={address} />
+          <input type="hidden" name="positionApplied" value={positionApplied} />
+          <input type="hidden" name="workType" value={workType} />
+          <input type="hidden" name="educationLevel" value={educationLevel} />
+          <input type="hidden" name="foreignLanguages" value={foreignLanguages} />
+          <input type="hidden" name="prevCompany" value={prevCompany} />
+          <input type="hidden" name="prevTitle" value={prevTitle} />
+          <input type="hidden" name="prevDuration" value={prevDuration} />
+          <input type="hidden" name="prevReason" value={prevReason} />
+          <input type="hidden" name="message" value={message} />
         </form>
       </div>
     </main>
