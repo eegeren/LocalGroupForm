@@ -82,7 +82,6 @@ export default function Page() {
       if (json.ok) {
         setSuccessData({ gender })
         setStatus('')
-        // reset (istersen kalsın diye boş bırakabilirsin)
         setStep(1)
       } else {
         setStatus('⚠️ Hata: ' + (json.error ?? 'Geçersiz veri veya sunucu hatası.'))
@@ -123,17 +122,6 @@ export default function Page() {
   return (
     <main className="min-h-screen">
       <div className="max-w-2xl mx-auto p-6">
-        {/* Üst başlık + Yönetici butonu */}
-        <div className="mb-2 flex items-center justify-between">
-          <div className="text-sm font-medium">Başvuru Formu</div>
-          <Link
-            href="/admin"
-            className="rounded-lg border px-3 py-1.5 text-sm bg-white hover:bg-neutral-50"
-          >
-            Yönetici Girişi
-          </Link>
-        </div>
-
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-center">Başvuru Formu</h1>
           <p className="text-sm text-neutral-500 mt-1 text-center">
@@ -335,6 +323,7 @@ export default function Page() {
               <div className="flex gap-3 justify-between">
                 <button type="button" onClick={()=>setStep(2)} className="rounded-xl border px-5 py-2.5">Geri</button>
                 <button
+                  type="submit"
                   disabled={loading}
                   className="inline-flex items-center justify-center rounded-xl bg-black text-white px-5 py-2.5
                              font-medium disabled:opacity-60 hover:bg-neutral-800 transition"
@@ -345,7 +334,7 @@ export default function Page() {
             </>
           )}
 
-          {/* Hidden alanlar: Step1/2’de girilen zorunlular backend’e her zaman gitsin */}
+          {/* Hidden alanlar */}
           <input type="hidden" name="fullName" value={fullName} />
           <input type="hidden" name="phone" value={phone} />
           <input type="hidden" name="birthDate" value={birthDate} />

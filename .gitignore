@@ -13,3 +13,4 @@ coverage/
 # Prisma local db
 prisma/*.db
 prisma/*.db-journal
+.vercel
