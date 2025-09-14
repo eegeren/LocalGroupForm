@@ -87,9 +87,9 @@ export default function AdminPage() {
     { header: 'Ad Soyad', accessorKey: 'fullName',
       cell: info => <span className="font-medium">{info.getValue() as string}</span> },
     { header: 'Telefon', accessorKey: 'phone',
-      cell: ({getValue}) => <span className="whitespace-nowrap">{getValue() as string || '-'}</span> },
+      cell: ({getValue}) => <span className="whitespace-nowrap">{(getValue() as string) || '-'}</span> },
     { header: 'Pozisyon', accessorKey: 'positionApplied',
-      cell: ({getValue}) => getValue() as string || '-' },
+      cell: ({getValue}) => (getValue() as string) || '-' },
     { header: 'Tür', accessorKey: 'workType',
       cell: ({ getValue }) => {
         const v = (getValue() as string) || ''
@@ -178,7 +178,9 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin/${id}`)
       const json = await res.json()
       if (!json.ok) { alert(json.error || 'detay hatası'); return }
-      setDetail({ item: json.item, events: json.events })
+      // <<< önemli: events daima dizi olsun
+      const evs: Event[] = Array.isArray(json.events) ? json.events : []
+      setDetail({ item: json.item as Item, events: evs })
       setOpen(true)
     } catch {
       alert('Detay getirilemedi')
@@ -261,6 +263,9 @@ export default function AdminPage() {
     document.cookie = 'lg_admin=; Max-Age=0; path=/'
     window.location.href = '/'
   }, [])
+
+  // timeline için güvenli kopya
+  const evs = Array.isArray(detail?.events) ? detail!.events : []
 
   return (
     <main className="min-h-screen bg-neutral-50">
@@ -413,15 +418,14 @@ export default function AdminPage() {
             <div>
               <div className="text-sm font-semibold mb-2">Geçmiş / Timeline</div>
               <div className="space-y-2">
-                {detail.events.length === 0 ? (
+                {evs.length === 0 ? (
                   <div className="text-sm text-neutral-500">Henüz geçmiş yok.</div>
-                ) : detail.events.map(ev => (
+                ) : evs.map(ev => (
                   <div key={ev.id} className="border rounded-lg p-2 text-sm">
                     <div className="text-neutral-500">{new Date(ev.createdAt).toLocaleString()}</div>
-                    {ev.type === 'NOTE' && (
+                    {ev.type === 'NOTE' ? (
                       <div><b>Not:</b> {ev.note}</div>
-                    )}
-                    {ev.type !== 'NOTE' && (
+                    ) : (
                       <div>
                         <b>{ev.type}</b>{ev.field ? ` (${ev.field})` : ''}: {ev.oldValue ?? '-'} → {ev.newValue ?? '-'}
                       </div>

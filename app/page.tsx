@@ -132,7 +132,7 @@ export default function Page() {
             Lütfen formu doldurun. <span className="font-medium">*</span> alanlar zorunludur.
           </p>
 
-        <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
+          <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
             <div className="h-full bg-black transition-all" style={{width: progress + '%'}} />
           </div>
           <div className="mt-1 text-xs text-neutral-600 text-right">{progress}%</div>
@@ -205,7 +205,7 @@ export default function Page() {
                     className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
-                  {/* >>> Burayı kalın & siyah yaptık <<< */}
+                  {/* Kalın & siyah etiket */}
                   <label className="block text-sm font-bold mb-2 text-black">Çalışma Türü *</label>
                   <select name="workType"
                     value={workType} onChange={(e)=>setWorkType(e.target.value)}
@@ -220,24 +220,24 @@ export default function Page() {
               </div>
 
               <div>
-  <h3 className="text-sm font-semibold text-neutral-800 mb-2">Vardiya Türü</h3>
-  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-    {[
-      {k:'gunduz', label:'Gündüz'},
-      {k:'aksam', label:'Akşam'},
-      {k:'gece', label:'Gece'},
-      {k:'haftaSonu', label:'Hafta Sonu'},
-      {k:'parttime', label:'Part-Time'},
-    ].map(opt => (
-      <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
-        <input type="checkbox"
-          checked={shift[opt.k as ShiftKeys]}
-          onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
-        {opt.label}
-      </label>
-    ))}
-  </div>
-</div>
+                <h3 className="text-sm font-semibold text-neutral-800 mb-2">Vardiya Türü</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    {k:'gunduz', label:'Gündüz'},
+                    {k:'aksam', label:'Akşam'},
+                    {k:'gece', label:'Gece'},
+                    {k:'haftaSonu', label:'Hafta Sonu'},
+                    {k:'parttime', label:'Part-Time'},
+                  ].map(opt => (
+                    <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
+                      <input type="checkbox"
+                        checked={shift[opt.k as ShiftKeys]}
+                        onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex justify-between">
                 <button type="button" onClick={()=>setStep(1)} className="rounded-xl border px-5 py-2.5">Geri</button>
@@ -354,6 +354,18 @@ export default function Page() {
           <input type="hidden" name="prevReason" value={prevReason} />
           <input type="hidden" name="message" value={message} />
         </form>
+
+        {/* --- Footer / İmza (sadece bu sayfada) --- */}
+        <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
+          © {new Date().getFullYear()} Local Group •{' '}
+          <a
+            href="https://cortexaai.net"
+            target="_blank"
+            className="font-semibold underline-offset-2 hover:underline"
+          >
+            Cortexa Labs.
+          </a>
+        </footer>
       </div>
     </main>
   )
