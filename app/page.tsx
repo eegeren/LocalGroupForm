@@ -355,8 +355,7 @@ export default function Page() {
           <input type="hidden" name="message" value={message} />
         </form>
 
-        {/* --- Footer / İmza (sadece bu sayfada) --- */}
-        <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
+         <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
           © {new Date().getFullYear()} Local Group •{' '}
           <a
             href="https://cortexaai.net"
