@@ -358,7 +358,7 @@ export default function Page() {
          <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
           © {new Date().getFullYear()} Local Group •{' '}
           <a
-            href="https://cortexaai.net"
+            href="https://www.cortexaai.net"
             target="_blank"
             className="font-semibold underline-offset-2 hover:underline"
           >
