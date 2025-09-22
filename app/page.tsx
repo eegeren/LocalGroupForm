@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import cities from '@/data/cities.json' // 81 il + tüm ilçeler (JSON)
+import cities from '../cities.json'
 
 type ShiftKeys = 'gunduz'|'aksam'|'gece'|'haftaSonu'|'parttime'
 
