@@ -249,7 +249,6 @@ export default function Page() {
                     <option value="">Seçiniz</option>
                     <option value="female">Kadın</option>
                     <option value="male">Erkek</option>
-                    <option value="other">Belirtmek istemiyorum</option>
                   </select>
                 </div>
 
