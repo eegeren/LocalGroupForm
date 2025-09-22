@@ -17,6 +17,11 @@ type Item = {
   positionApplied?: string | null
   workType?: string | null
   shiftAvailability?: string | null
+  salaryExpectation?: string | null
+  insurancePreference?: string | null
+  partTimeDays?: string | null
+  partTimeStart?: string | null
+  partTimeEnd?: string | null
   educationLevel?: string | null
   foreignLanguages?: string | null
   prevCompany?: string | null
@@ -267,6 +272,29 @@ export default function AdminPage() {
   // timeline için güvenli kopya
   const evs = Array.isArray(detail?.events) ? detail!.events : []
 
+  const formatInsurance = (value?: string | null) => {
+    if (!value) return '-'
+    const map: Record<string, string> = {
+      istiyorum: 'Sigorta istiyorum',
+      istemiyorum: 'Sigorta istemiyorum',
+      farketmez: 'Fark etmez',
+    }
+    return map[value] || value
+  }
+
+  const formatPartTimeDays = (value?: string | null) => {
+    if (!value) return '-'
+    const items = value.split(',').map(v => v.trim()).filter(Boolean)
+    return items.length ? items.join(', ') : '-'
+  }
+
+  const formatPartTimeHours = (start?: string | null, end?: string | null) => {
+    if (start && end) return `${start} – ${end}`
+    if (start) return start
+    if (end) return end
+    return '-'
+  }
+
   return (
     <main className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto p-4 md:p-6">
@@ -377,10 +405,13 @@ export default function AdminPage() {
                 ['Ad Soyad', detail.item.fullName],
                 ['Telefon', detail.item.phone || '-'],
                 ['Cinsiyet', detail.item.gender === 'female' ? 'Kadın' : detail.item.gender === 'male' ? 'Erkek' : (detail.item.gender ? 'Belirtmek istemiyor' : '-')],
-                ['Adres', detail.item.address || '-'],
                 ['Doğum Tarihi', detail.item.birthDate ? new Date(detail.item.birthDate).toLocaleDateString() : '-'],
                 ['Pozisyon', detail.item.positionApplied || '-'],
                 ['Çalışma Türü', detail.item.workType || '-'],
+                ['Sigorta Tercihi', formatInsurance(detail.item.insurancePreference)],
+                ['Maaş Beklentisi', detail.item.salaryExpectation || '-'],
+                ['Part-Time Günler', formatPartTimeDays(detail.item.partTimeDays)],
+                ['Part-Time Saat', formatPartTimeHours(detail.item.partTimeStart, detail.item.partTimeEnd)],
                 ['Vardiya', detail.item.shiftAvailability || '-'],
                 ['Eğitim Durumu', detail.item.educationLevel || '-'],
                 ['Yabancı Diller', detail.item.foreignLanguages || '-'],
@@ -388,8 +419,6 @@ export default function AdminPage() {
                 ['Görev/Ünvan', detail.item.prevTitle || '-'],
                 ['Çalışma Süresi', detail.item.prevDuration || '-'],
                 ['Ayrılma Sebebi', detail.item.prevReason || '-'],
-                ['Durum', detail.item.status || 'PENDING'],
-                ['Arşiv', detail.item.archived ? 'Evet' : 'Hayır'],
                 ['KVKK Onayı', detail.item.consent ? 'Evet' : 'Hayır'],
                 ['Kayıt Tarihi', new Date(detail.item.createdAt).toLocaleString()],
               ] as [string,string][]).map(([k,v]) => (
