@@ -1,8 +1,24 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import cities from '@/data/cities.json' // 81 il + tüm ilçeler (JSON)
 
 type ShiftKeys = 'gunduz'|'aksam'|'gece'|'haftaSonu'|'parttime'
+
+const WORK_TYPES = [
+  { v: 'sabit', label: 'Sabit' },
+  { v: 'sezonluk', label: 'Sezonluk' },
+  { v: 'gunluk', label: 'Günlük' },
+  { v: 'parttime', label: 'Part-Time' },
+]
+
+const SHIFTS: {k: ShiftKeys, label: string}[] = [
+  {k:'gunduz', label:'Gündüz'},
+  {k:'aksam', label:'Akşam'},
+  {k:'gece', label:'Gece'},
+  {k:'haftaSonu', label:'Hafta Sonu'},
+  {k:'parttime', label:'Part-Time'},
+]
 
 export default function Page() {
   const [step, setStep] = useState<1|2|3>(1)
@@ -10,12 +26,14 @@ export default function Page() {
   const [loading, setLoading] = useState(false)
   const [consent, setConsent] = useState(false)
 
-  // --- FORM STATE (SSR güvenli) ---
+  // --- FORM STATE (orijinal alanlar) ---
   const [fullName, setFullName] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [phone, setPhone] = useState('')
   const [gender, setGender] = useState('')
-  const [address, setAddress] = useState('')
+  // Adres: il + ilçe (adres metni yerine)
+  const [city, setCity] = useState('')
+  const [district, setDistrict] = useState('')
 
   const [positionApplied, setPositionApplied] = useState('')
   const [workType, setWorkType] = useState('')
@@ -28,6 +46,10 @@ export default function Page() {
   const [prevReason, setPrevReason] = useState('')
   const [message, setMessage] = useState('')
 
+  // “Sigorta istiyorum” chip’i
+  const [wantsInsurance, setWantsInsurance] = useState(false)
+
+  // Vardiya
   const [shift, setShift] = useState<Record<ShiftKeys, boolean>>({
     gunduz:false, aksam:false, gece:false, haftaSonu:false, parttime:false
   })
@@ -40,8 +62,11 @@ export default function Page() {
   }
   const [successData, setSuccessData] = useState<{gender?: string}>({})
 
+  // --- VALIDATION ---
   function validateStep1() {
     if (!fullName.trim()) return 'Ad Soyad zorunludur.'
+    if (!city) return 'İl seçiniz.'
+    if (!district) return 'İlçe seçiniz.'
     return ''
   }
   function validateStep2() {
@@ -49,11 +74,12 @@ export default function Page() {
     return ''
   }
   function validateStep3() {
-    if (message.trim().length < 5) return 'Ek Not en az 5 karakter olmalı.'
+    if (message.trim().length < 5 && !wantsInsurance) return 'Ek Not en az 5 karakter olmalı (ya da “Sigorta istiyorum”u işaretleyin).'
     if (!consent) return 'Lütfen KVKK aydınlatmasını onaylayın.'
     return ''
   }
 
+  // --- SUBMIT ---
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const ve = validateStep3()
@@ -61,12 +87,22 @@ export default function Page() {
 
     setLoading(true); setStatus('Gönderiliyor…')
 
+    // sigorta chip’i açıksa mesaja otomatik, tek satırlık not ekle
+    let finalMessage = message.trim()
+    const insuranceLine = 'Sigorta talep ediyorum.'
+    if (wantsInsurance && !finalMessage.includes(insuranceLine)) {
+      finalMessage = finalMessage ? `${insuranceLine}\n${finalMessage}` : insuranceLine
+    }
+
     const payload: any = {
-      fullName, birthDate, phone, gender, address,
+      fullName, birthDate, phone, gender,
+      addressCity: city,
+      addressDistrict: district,
       positionApplied, workType,
       educationLevel, foreignLanguages,
       prevCompany, prevTitle, prevDuration, prevReason,
-      message,
+      message: finalMessage,
+      wantsInsurance,
       consent,
       shiftAvailability: toShiftString(shift),
     }
@@ -90,6 +126,7 @@ export default function Page() {
     } finally { setLoading(false) }
   }
 
+  // --- SUCCESS VIEW ---
   if (successData.gender) {
     const link = wpLinks[successData.gender] || ''
     return (
@@ -102,7 +139,7 @@ export default function Page() {
               <>
                 <p className="text-neutral-700">Katılmanız için WhatsApp grubunuzun linki aşağıdadır:</p>
                 <a href={link} target="_blank"
-                  className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
+                   className="inline-block bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition">
                   WhatsApp Grubuna Katıl
                 </a>
               </>
@@ -120,11 +157,10 @@ export default function Page() {
 
   const progress = step === 1 ? 33 : step === 2 ? 66 : 100
 
+  // --- FORM ---
   return (
     <main className="min-h-screen relative bg-white">
-      {/* Watermark layer */}
       <div className="absolute inset-0 bg-watermark" />
-      {/* İçerik layer */}
       <div className="relative max-w-2xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight text-center">Başvuru Formu</h1>
@@ -133,7 +169,7 @@ export default function Page() {
           </p>
 
           <div className="mt-4 h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
-            <div className="h-full bg-black transition-all" style={{width: progress + '%'}} />
+            <div className="h-full bg-black transition-all" style={{ width: progress + '%' }} />
           </div>
           <div className="mt-1 text-xs text-neutral-600 text-right">{progress}%</div>
         </div>
@@ -146,36 +182,59 @@ export default function Page() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Ad Soyad *</label>
                   <input name="fullName" required placeholder="Adınız Soyadınız"
-                    value={fullName} onChange={(e)=>setFullName(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                         value={fullName} onChange={(e)=>setFullName(e.target.value)}
+                         className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Doğum Tarihi</label>
                   <input type="date" name="birthDate"
-                    value={birthDate} onChange={(e)=>setBirthDate(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                         value={birthDate} onChange={(e)=>setBirthDate(e.target.value)}
+                         className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Telefon</label>
                   <input name="phone" placeholder="5xx xxx xx xx"
-                    value={phone} onChange={(e)=>setPhone(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                         value={phone} onChange={(e)=>setPhone(e.target.value)}
+                         className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Cinsiyet</label>
                   <select name="gender" value={gender} onChange={(e)=>setGender(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2">
+                          className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2">
                     <option value="">Seçiniz</option>
                     <option value="female">Kadın</option>
                     <option value="male">Erkek</option>
                     <option value="other">Belirtmek istemiyorum</option>
                   </select>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-1 text-neutral-700">Adres</label>
-                  <input name="address" placeholder="İl/İlçe, mahalle, adres"
-                    value={address} onChange={(e)=>setAddress(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+
+                {/* İl & İlçe */}
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-neutral-700">İl *</label>
+                  <select
+                    value={city}
+                    onChange={(e)=>{ setCity(e.target.value); setDistrict('') }}
+                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
+                  >
+                    <option value="">İl seçiniz</option>
+                    {Object.keys(cities as Record<string,string[]>).map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-neutral-700">İlçe *</label>
+                  <select
+                    value={district}
+                    onChange={(e)=>setDistrict(e.target.value)}
+                    disabled={!city}
+                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 disabled:bg-neutral-100"
+                  >
+                    <option value="">{city ? 'İlçe seçiniz' : 'Önce il seçiniz'}</option>
+                    {city && (cities as Record<string,string[]>)[city]?.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -201,41 +260,58 @@ export default function Page() {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-neutral-700">Başvurulan Pozisyon</label>
                   <input name="positionApplied" placeholder="Örn: Garson, Kasiyer, Barista"
-                    value={positionApplied} onChange={(e)=>setPositionApplied(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                         value={positionApplied} onChange={(e)=>setPositionApplied(e.target.value)}
+                         className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                 </div>
+
+                {/* Şık segmented (pill) seçim: Çalışma Türü */}
                 <div>
-                  {/* Kalın & siyah etiket */}
                   <label className="block text-sm font-bold mb-2 text-black">Çalışma Türü *</label>
-                  <select name="workType"
-                    value={workType} onChange={(e)=>setWorkType(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">Seçiniz</option>
-                    <option value="sabit">Sabit</option>
-                    <option value="sezonluk">Sezonluk</option>
-                    <option value="gunluk">Günlük</option>
-                    <option value="parttime">Part-Time</option>
-                  </select>
+                  <div className="flex flex-wrap gap-2">
+                    {WORK_TYPES.map(t => {
+                      const active = workType === t.v
+                      return (
+                        <button
+                          key={t.v}
+                          type="button"
+                          onClick={()=>setWorkType(t.v)}
+                          className={
+                            "px-3 py-1.5 rounded-full border transition " +
+                            (active
+                              ? "bg-black text-white border-black shadow"
+                              : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400")
+                          }
+                        >
+                          {t.label}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
 
+              {/* Şık pill checkboxlar: Vardiya Türü */}
               <div>
                 <h3 className="text-sm font-semibold text-neutral-800 mb-2">Vardiya Türü</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {[
-                    {k:'gunduz', label:'Gündüz'},
-                    {k:'aksam', label:'Akşam'},
-                    {k:'gece', label:'Gece'},
-                    {k:'haftaSonu', label:'Hafta Sonu'},
-                    {k:'parttime', label:'Part-Time'},
-                  ].map(opt => (
-                    <label key={opt.k} className="inline-flex items-center gap-2 text-sm">
-                      <input type="checkbox"
-                        checked={shift[opt.k as ShiftKeys]}
-                        onChange={(e)=> setShift(s=>({ ...s, [opt.k]: e.target.checked }))}/>
-                      {opt.label}
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  {SHIFTS.map(opt => {
+                    const checked = shift[opt.k]
+                    return (
+                      <button
+                        key={opt.k}
+                        type="button"
+                        onClick={()=> setShift(s=>({ ...s, [opt.k]: !s[opt.k] }))}
+                        className={
+                          "px-3 py-1.5 rounded-full border text-sm transition " +
+                          (checked
+                            ? "bg-black text-white border-black shadow"
+                            : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400")
+                        }
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -262,14 +338,14 @@ export default function Page() {
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Eğitim Durumu</label>
                     <input name="educationLevel" placeholder="Lise, Ön Lisans, Lisans vb."
-                      value={educationLevel} onChange={(e)=>setEducationLevel(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={educationLevel} onChange={(e)=>setEducationLevel(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Yabancı Dil</label>
                     <input name="foreignLanguages" placeholder="Örn: İngilizce B2; Almanca A2"
-                      value={foreignLanguages} onChange={(e)=>setForeignLanguages(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={foreignLanguages} onChange={(e)=>setForeignLanguages(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                 </div>
               </section>
@@ -279,42 +355,67 @@ export default function Page() {
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışılan İşletme</label>
                     <input name="prevCompany" placeholder="Örn: Local Group Cafe"
-                      value={prevCompany} onChange={(e)=>setPrevCompany(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={prevCompany} onChange={(e)=>setPrevCompany(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Görev / Pozisyon</label>
                     <input name="prevTitle" placeholder="Örn: Garson"
-                      value={prevTitle} onChange={(e)=>setPrevTitle(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={prevTitle} onChange={(e)=>setPrevTitle(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Çalışma Süresi</label>
                     <input name="prevDuration" placeholder="Örn: 6 ay, 2022-2023"
-                      value={prevDuration} onChange={(e)=>setPrevDuration(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={prevDuration} onChange={(e)=>setPrevDuration(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-neutral-700">Ayrılma Sebebi</label>
                     <input name="prevReason" placeholder="Örn: Okul dönemi bitti"
-                      value={prevReason} onChange={(e)=>setPrevReason(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
+                           value={prevReason} onChange={(e)=>setPrevReason(e.target.value)}
+                           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
                   </div>
                 </div>
               </section>
 
               <section className="space-y-2">
-                <label className="block text-sm font-medium mb-1 text-neutral-700">Ek Not *</label>
-                <textarea name="message" required rows={4} placeholder="Mesajınız"
-                  value={message} onChange={(e)=>setMessage(e.target.value)}
-                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"/>
-                <p className="text-xs text-neutral-500 mt-1">En az 5 karakter olmalı.</p>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-neutral-700">Ek Not *</label>
+
+                  {/* Gri sigorta çipi */}
+                  <button
+                    type="button"
+                    onClick={()=>setWantsInsurance(v=>!v)}
+                    className={
+                      "text-xs px-3 py-1.5 rounded-full border transition " +
+                      (wantsInsurance
+                        ? "bg-neutral-700 text-white border-neutral-700"
+                        : "bg-neutral-100 text-neutral-700 border-neutral-200 hover:border-neutral-300")
+                    }
+                    title="Mesaja 'Sigorta talep ediyorum.' notu eklenecek"
+                  >
+                    Sigorta istiyorum
+                  </button>
+                </div>
+
+                <textarea
+                  name="message"
+                  rows={4}
+                  placeholder="Mesajınız"
+                  value={message}
+                  onChange={(e)=>setMessage(e.target.value)}
+                  className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
+                />
+                <p className="text-xs text-neutral-500 mt-1">
+                  En az 5 karakter. “Sigorta istiyorum” çipini açarsanız bu gereklilik aranmaz.
+                </p>
               </section>
 
               <div className="flex items-start gap-3">
                 <input id="kvkk" type="checkbox" required checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-neutral-300"/>
+                       onChange={(e) => setConsent(e.target.checked)}
+                       className="mt-1 h-4 w-4 rounded border-neutral-300"/>
                 <label htmlFor="kvkk" className="text-sm text-neutral-700">
                   <span className="font-medium">KVKK Aydınlatmasını</span> okudum ve kişisel verilerimin
                   iletişim amacıyla işlenmesine onay veriyorum.{' '}
@@ -338,12 +439,13 @@ export default function Page() {
             </>
           )}
 
-          {/* Hidden alanlar */}
+          {/* Hidden alanlar (güncellendi) */}
           <input type="hidden" name="fullName" value={fullName} />
           <input type="hidden" name="phone" value={phone} />
           <input type="hidden" name="birthDate" value={birthDate} />
           <input type="hidden" name="gender" value={gender} />
-          <input type="hidden" name="address" value={address} />
+          <input type="hidden" name="addressCity" value={city} />
+          <input type="hidden" name="addressDistrict" value={district} />
           <input type="hidden" name="positionApplied" value={positionApplied} />
           <input type="hidden" name="workType" value={workType} />
           <input type="hidden" name="educationLevel" value={educationLevel} />
@@ -353,9 +455,10 @@ export default function Page() {
           <input type="hidden" name="prevDuration" value={prevDuration} />
           <input type="hidden" name="prevReason" value={prevReason} />
           <input type="hidden" name="message" value={message} />
+          <input type="hidden" name="wantsInsurance" value={String(wantsInsurance)} />
         </form>
 
-         <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
+        <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
           © {new Date().getFullYear()} Local Group •{' '}
           <a
             href="https://www.cortexaai.net"
