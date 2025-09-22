@@ -64,6 +64,8 @@ export default function Page() {
   const toShiftString = (obj: Record<string, boolean>) =>
     Object.entries(obj).filter(([,v])=>v).map(([k])=>k).join(',')
 
+  const isPartTimeSelected = workTypes.parttime || shift.parttime
+
   // Maaş beklentisi
   const [salaryExpectation, setSalaryExpectation] = useState('')
   const [insurancePreference, setInsurancePreference] = useState('')
@@ -107,7 +109,7 @@ export default function Page() {
     if (!anyShift) return 'En az bir Vardiya Türü seçiniz.'
     if (!insurancePreference) return 'Sigorta tercihini seçiniz.'
     // Eğer part-time seçiliyse gün ve saat zorunlu
-    if (workTypes.parttime) {
+    if (isPartTimeSelected) {
       const anyDay = Object.values(ptDays).some(Boolean)
       if (!anyDay) return 'Part-Time için en az bir gün seçiniz.'
       if (!ptStart || !ptEnd) return 'Part-Time için başlangıç ve bitiş saatlerini giriniz.'
@@ -397,7 +399,7 @@ export default function Page() {
               </div>
 
               {/* Part-Time detayları */}
-              {workTypes.parttime && (
+              {isPartTimeSelected && (
                 <div className="rounded-xl border border-neutral-200 p-4 space-y-3 bg-neutral-50">
                   <h4 className="font-medium">Part-Time Uygunluk</h4>
                   <div className="flex flex-wrap gap-2">
