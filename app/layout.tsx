@@ -4,6 +4,10 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "Local Group",
   description: "Başvuru Formu",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
