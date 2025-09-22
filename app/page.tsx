@@ -337,6 +337,22 @@ export default function Page() {
                       })}
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-neutral-700">Sigorta Tercihi *</label>
+                    <select
+                      required
+                      name="insurancePreference"
+                      value={insurancePreference}
+                      onChange={(e)=>setInsurancePreference(e.target.value)}
+                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
+                    >
+                      <option value="">Seçiniz</option>
+                      <option value="istiyorum">Sigorta istiyorum</option>
+                      <option value="istemiyorum">Sigorta istemiyorum</option>
+                      <option value="farketmez">Fark etmez</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Vardiya Türü SOLA hizalı, SAĞDA maaş */}
@@ -376,21 +392,6 @@ export default function Page() {
                       className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
                       inputMode="numeric"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-neutral-700">Sigorta Tercihi *</label>
-                    <select
-                      required
-                      name="insurancePreference"
-                      value={insurancePreference}
-                      onChange={(e)=>setInsurancePreference(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
-                    >
-                      <option value="">Seçiniz</option>
-                      <option value="istiyorum">Sigorta istiyorum</option>
-                      <option value="istemiyorum">Sigorta istemiyorum</option>
-                      <option value="farketmez">Fark etmez</option>
-                    </select>
                   </div>
                 </div>
               </div>
