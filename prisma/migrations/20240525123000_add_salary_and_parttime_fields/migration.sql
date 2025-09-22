@@ -1,0 +1,6 @@
+ALTER TABLE "Submission"
+  ADD COLUMN IF NOT EXISTS "salaryExpectation" TEXT,
+  ADD COLUMN IF NOT EXISTS "insurancePreference" TEXT,
+  ADD COLUMN IF NOT EXISTS "partTimeDays" TEXT,
+  ADD COLUMN IF NOT EXISTS "partTimeStart" TEXT,
+  ADD COLUMN IF NOT EXISTS "partTimeEnd" TEXT;
