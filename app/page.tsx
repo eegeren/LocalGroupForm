@@ -57,9 +57,6 @@ export default function Page() {
   const [prevReason, setPrevReason] = useState('')
   const [message, setMessage] = useState('')
 
-  // “Sigorta istiyorum” chip’i
-  const [wantsInsurance, setWantsInsurance] = useState(false)
-
   // Vardiya
   const [shift, setShift] = useState<Record<ShiftKeys, boolean>>({
     gunduz:false, aksam:false, gece:false, haftaSonu:false, parttime:false
@@ -120,7 +117,7 @@ export default function Page() {
     if (!prevTitle.trim()) return 'Görev/Pozisyon zorunludur.'
     if (!prevDuration.trim()) return 'Çalışma süresi zorunludur.'
     if (!prevReason.trim()) return 'Ayrılma sebebi zorunludur.'
-    if (message.trim().length < 5 && !wantsInsurance) return 'Ek Not en az 5 karakter olmalı (ya da “Sigorta istiyorum”u işaretleyin).'
+    if (message.trim().length < 5) return 'Ek Not en az 5 karakter olmalı.'
     if (!consent) return 'Lütfen KVKK aydınlatmasını onaylayın.'
     return ''
   }
@@ -133,12 +130,7 @@ export default function Page() {
 
     setLoading(true); setStatus('Gönderiliyor…')
 
-    // sigorta chip’i açıksa mesaja tek satırlık not ekle
-    let finalMessage = message.trim()
-    const insuranceLine = 'Sigorta talep ediyorum.'
-    if (wantsInsurance && !finalMessage.includes(insuranceLine)) {
-      finalMessage = finalMessage ? `${insuranceLine}\n${finalMessage}` : insuranceLine
-    }
+    const finalMessage = message.trim()
 
     const workTypesCsv = toCsv(workTypes)
 
@@ -156,7 +148,6 @@ export default function Page() {
       educationLevel, foreignLanguages,
       prevCompany, prevTitle, prevDuration, prevReason,
       message: finalMessage,
-      wantsInsurance,
       consent,
       shiftAvailability: toShiftString(shift),
     }
@@ -498,25 +489,7 @@ export default function Page() {
               </section>
 
               <section className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-neutral-700">Ek Not *</label>
-
-                  {/* Gri sigorta çipi */}
-                  <button
-                    type="button"
-                    onClick={()=>setWantsInsurance(v=>!v)}
-                    className={
-                      "text-xs px-3 py-1.5 rounded-full border transition " +
-                      (wantsInsurance
-                        ? "bg-neutral-700 text-white border-neutral-700"
-                        : "bg-neutral-100 text-neutral-700 border-neutral-200 hover:border-neutral-300")
-                    }
-                    title="Mesaja 'Sigorta talep ediyorum.' notu eklenecek"
-                  >
-                    Sigorta istiyorum
-                  </button>
-                </div>
-
+                <label className="block text-sm font-medium text-neutral-700">Ek Not *</label>
                 <textarea
                   name="message"
                   rows={4}
@@ -526,7 +499,7 @@ export default function Page() {
                   className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
                 />
                 <p className="text-xs text-neutral-500 mt-1">
-                  En az 5 karakter. “Sigorta istiyorum” çipini açarsanız bu gereklilik aranmaz.
+                  En az 5 karakter.
                 </p>
               </section>
 
@@ -577,7 +550,6 @@ export default function Page() {
           <input type="hidden" name="prevDuration" value={prevDuration} />
           <input type="hidden" name="prevReason" value={prevReason} />
           <input type="hidden" name="message" value={message} />
-          <input type="hidden" name="wantsInsurance" value={String(wantsInsurance)} />
         </form>
 
         <footer className="relative mt-10 py-6 text-center text-xs text-neutral-600/80">
