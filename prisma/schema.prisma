@@ -28,5 +28,10 @@ model Submission {
   prevDuration      String?
   workType          String?
   prevReason        String?
+  salaryExpectation String?
+  insurancePreference String?
+  partTimeDays      String?
+  partTimeStart     String?
+  partTimeEnd       String?
   createdAt         DateTime  @default(now())
 }

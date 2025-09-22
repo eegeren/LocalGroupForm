@@ -37,6 +37,11 @@ export async function POST(req: Request) {
       workType: body.workType ?? null,
       employmentType: body.employmentType ?? null,
       shiftAvailability: body.shiftAvailability ?? null,
+      salaryExpectation: body.salaryExpectation ?? null,
+      insurancePreference: body.insurancePreference ?? null,
+      partTimeDays: body.partTimeDays ?? null,
+      partTimeStart: body.partTimeStart ?? null,
+      partTimeEnd: body.partTimeEnd ?? null,
       educationLevel: body.educationLevel ?? null,
       foreignLanguages: body.foreignLanguages ?? null,
 
