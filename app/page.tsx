@@ -64,11 +64,8 @@ export default function Page() {
   const toShiftString = (obj: Record<string, boolean>) =>
     Object.entries(obj).filter(([,v])=>v).map(([k])=>k).join(',')
 
-  const isPartTimeSelected = workTypes.parttime || shift.parttime
-
   // Maaş beklentisi
   const [salaryExpectation, setSalaryExpectation] = useState('')
-  const [insurancePreference, setInsurancePreference] = useState('')
 
   // Part-time detay: günler + saatler
   const [ptDays, setPtDays] = useState<Record<DayKey, boolean>>({
@@ -107,9 +104,8 @@ export default function Page() {
     if (!anyWorkType) return 'En az bir Çalışma Türü seçiniz.'
     const anyShift = Object.values(shift).some(Boolean)
     if (!anyShift) return 'En az bir Vardiya Türü seçiniz.'
-    if (!insurancePreference) return 'Sigorta tercihini seçiniz.'
     // Eğer part-time seçiliyse gün ve saat zorunlu
-    if (isPartTimeSelected) {
+    if (workTypes.parttime) {
       const anyDay = Object.values(ptDays).some(Boolean)
       if (!anyDay) return 'Part-Time için en az bir gün seçiniz.'
       if (!ptStart || !ptEnd) return 'Part-Time için başlangıç ve bitiş saatlerini giriniz.'
@@ -146,7 +142,6 @@ export default function Page() {
       workTypes: workTypesCsv,
       workType: workTypesCsv, // geriye dönük uyumluluk
       salaryExpectation,
-      insurancePreference,
       partTimeDays: ptDaysCsv,
       partTimeStart: ptStart,
       partTimeEnd: ptEnd,
@@ -339,22 +334,6 @@ export default function Page() {
                       })}
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-neutral-700">Sigorta Tercihi *</label>
-                    <select
-                      required
-                      name="insurancePreference"
-                      value={insurancePreference}
-                      onChange={(e)=>setInsurancePreference(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2"
-                    >
-                      <option value="">Seçiniz</option>
-                      <option value="istiyorum">Sigorta istiyorum</option>
-                      <option value="istemiyorum">Sigorta istemiyorum</option>
-                      <option value="farketmez">Fark etmez</option>
-                    </select>
-                  </div>
                 </div>
 
                 {/* Vardiya Türü SOLA hizalı, SAĞDA maaş */}
@@ -399,7 +378,7 @@ export default function Page() {
               </div>
 
               {/* Part-Time detayları */}
-              {isPartTimeSelected && (
+              {workTypes.parttime && (
                 <div className="rounded-xl border border-neutral-200 p-4 space-y-3 bg-neutral-50">
                   <h4 className="font-medium">Part-Time Uygunluk</h4>
                   <div className="flex flex-wrap gap-2">
@@ -550,7 +529,6 @@ export default function Page() {
             </>
           )}
 
-          {/* Hidden alanlar */}
           <input type="hidden" name="fullName" value={fullName} />
           <input type="hidden" name="phone" value={phone} />
           <input type="hidden" name="birthDate" value={birthDate} />
@@ -560,7 +538,6 @@ export default function Page() {
           <input type="hidden" name="positionApplied" value={positionApplied} />
           <input type="hidden" name="workType" value={toCsv(workTypes)} />
           <input type="hidden" name="salaryExpectation" value={salaryExpectation} />
-          <input type="hidden" name="insurancePreference" value={insurancePreference} />
           <input type="hidden" name="partTimeDays" value={ptDaysCsv} />
           <input type="hidden" name="partTimeStart" value={ptStart} />
           <input type="hidden" name="partTimeEnd" value={ptEnd} />
