@@ -93,6 +93,8 @@ export default function AdminPage() {
       cell: info => <span className="font-medium">{info.getValue() as string}</span> },
     { header: 'Telefon', accessorKey: 'phone',
       cell: ({getValue}) => <span className="whitespace-nowrap">{(getValue() as string) || '-'}</span> },
+    { header: 'Il / Ilce', accessorKey: 'address',
+      cell: ({getValue}) => (getValue() as string) || '-' },
     { header: 'Pozisyon', accessorKey: 'positionApplied',
       cell: ({getValue}) => (getValue() as string) || '-' },
     { header: 'Tür', accessorKey: 'workType',

@@ -56,6 +56,7 @@ export async function GET(req: Request) {
         id: true,
         fullName: true,
         phone: true,
+        address: true,
         positionApplied: true,
         gender: true,
         createdAt: true,
