@@ -111,7 +111,7 @@ export async function POST(req: Request) {
           { label: 'Ayrılma Sebebi', value: format(saved.prevReason) },
           { label: 'Doğum Tarihi', value: format(saved.birthDate) },
           { label: 'Cinsiyet', value: genderMap[saved.gender ?? ''] || format(saved.gender) },
-          { label: 'Adres', value: format(saved.address) },
+          { label: 'Il / Ilce', value: format(saved.address) },
           { label: 'KVKK Onayı', value: saved.consent ? 'Evet' : 'Hayır' },
           { label: 'Başvuru Tarihi', value: format(createdAt) },
         ]
