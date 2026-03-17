@@ -28,6 +28,8 @@ export async function POST(req: Request) {
       return value
     }
 
+    const addressParts = [normalize(body.addressCity), normalize(body.addressDistrict)].filter(Boolean)
+
     const data: any = {
       fullName: body.fullName,
       phone: normalize(body.phone),
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
       // kişisel
       birthDate: normalize(body.birthDate),
       gender: normalize(body.gender),
-      address: normalize(body.address),
+      address: addressParts.length ? addressParts.join(' / ') : normalize(body.address),
 
       // iş tarafı
       positionApplied: normalize(body.positionApplied),

@@ -406,6 +406,7 @@ export default function AdminPage() {
                 ['Telefon', detail.item.phone || '-'],
                 ['Cinsiyet', detail.item.gender === 'female' ? 'Kadın' : detail.item.gender === 'male' ? 'Erkek' : (detail.item.gender ? 'Belirtmek istemiyor' : '-')],
                 ['Doğum Tarihi', detail.item.birthDate ? new Date(detail.item.birthDate).toLocaleDateString() : '-'],
+                ['Il / Ilce', detail.item.address || '-'],
                 ['Pozisyon', detail.item.positionApplied || '-'],
                 ['Çalışma Türü', detail.item.workType || '-'],
                 ['Sigorta Tercihi', formatInsurance(detail.item.insurancePreference)],
