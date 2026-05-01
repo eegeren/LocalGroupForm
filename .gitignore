@@ -1,0 +1,26 @@
+# Node/Next
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+
+# Env & OS
+.env
+.env.local
+*.env
+.DS_Store
+
+# Prisma local db
+prisma/*.db
+prisma/**/*.db
+prisma/*.db-journal
+.vercel
+
+# SSH / keys (never commit)
+yes
+yes.pub
+
+# Mistaken filenames from shell
+/git remote -v
+/git remote -v.pub
